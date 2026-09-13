@@ -309,7 +309,7 @@ export const units: Unit[] = [
           { type: 'multipleChoice', id: 'u12-l2-e1', promptLang: 'lu', prompt: 'Kurs', options: ['Curso', 'Prova', 'Turma', 'Diploma'], correctIndex: 0, hint: "'Kurs' vem do alemão 'Kurs' (curso)." },
           { type: 'multipleChoice', id: 'u12-l2-e2', promptLang: 'lu', prompt: 'Bibliothéik', options: ['Escola', 'Biblioteca', 'Sala', 'Livraria'], correctIndex: 1, hint: "'Bibliothéik' vem do francês 'bibliothèque' (biblioteca)." },
           { type: 'translate', id: 'u12-l2-e3', promptLang: 'pt', prompt: 'Diploma', acceptedAnswers: ['Diplom'], hint: "'Diplom' é praticamente igual ao alemão 'Diplom'." },
-          { type: 'translate', id: 'u12-l2-e4', promptLang: 'pt', prompt: 'Bolsa de estudos', acceptedAnswers: ['Stipendium'], hint: "'Stipendium' vem do latim, presente também no alemão 'Stipendium'." },
+          { type: 'translate', id: 'u12-l2-e4', promptLang: 'pt', prompt: 'Bolsa de estudos', acceptedAnswers: ['Stipendium'], hint: "'Stipendium' vem do latim, presente também no alemão 'Stipendium'.", wordGlosses: { bolsa: 'Stipendium', estudos: 'Stipendium' } },
           { type: 'fillBlank', id: 'u12-l2-e5', promptLang: 'lu', sentence: 'Si studéiert un der ___', translation: 'Ela estuda na universidade', options: ['Universitéit', 'Schoul', 'Büro', 'Spidol'], correctAnswer: 'Universitéit', hint: "'Universitéit' vem do francês 'université'." },
           { type: 'match', id: 'u12-l2-e6', pairs: [
             { pt: 'Curso', lu: 'Kurs', hint: "Vem do alemão 'Kurs'." },
@@ -539,7 +539,7 @@ export const units: Unit[] = [
           { type: 'multipleChoice', id: 'u15-l2-e1', promptLang: 'lu', prompt: 'verléieren', options: ['Perder', 'Ganhar', 'Jogar', 'Treinar'], correctIndex: 0, hint: "'verléieren' vem do alemão 'verlieren' (perder)." },
           { type: 'translate', id: 'u15-l2-e2', promptLang: 'pt', prompt: 'Partida', acceptedAnswers: ['Match'], hint: "'Match' é emprestado do inglês, usado para 'partida'." },
           { type: 'fillBlank', id: 'u15-l2-e3', promptLang: 'lu', sentence: "Eis Ekipp huet d'Match ___", translation: 'Nosso time venceu a partida', options: ['gewonnen', 'verluer', 'gespillt', 'gekacht'], correctAnswer: 'gewonnen', hint: "'gewonnen' é o particípio de 'gewannen' (ganhar)." },
-          { type: 'translate', id: 'u15-l2-e4', promptLang: 'lu', prompt: 'Ech gi lafen all Moien', acceptedAnswers: ['Eu vou correr toda manhã'], hint: "Reaproveita 'lafen' (correr) já visto." },
+          { type: 'translate', id: 'u15-l2-e4', promptLang: 'lu', prompt: 'Ech gi lafen all Moien', acceptedAnswers: ['Eu vou correr toda manhã'], hint: "Reaproveita 'lafen' (correr) já visto.", wordGlosses: { moien: 'manhã (aqui não é a saudação "Moien")' } },
           { type: 'multipleChoice', id: 'u15-l2-e5', promptLang: 'pt', prompt: 'Treino', options: ['Training', 'Match', 'Ekipp', 'Champiounschaft'], correctIndex: 0, hint: "'Training' é quase idêntico ao inglês 'training'." },
           { type: 'match', id: 'u15-l2-e6', pairs: [
             { pt: 'Perder', lu: 'verléieren', hint: "Vem do alemão 'verlieren'." },
@@ -565,9 +565,9 @@ export const units: Unit[] = [
         exercises: [
           { type: 'multipleChoice', id: 'u9-l1-e1', promptLang: 'lu', prompt: 'mengen', options: ['Achar/pensar', 'Comer', 'Correr', 'Comprar'], correctIndex: 0, hint: "'mengen' vem do alemão 'meinen' (achar/opinar)." },
           { type: 'multipleChoice', id: 'u9-l1-e2', promptLang: 'lu', prompt: 'averstan sinn', options: ['Discordar', 'Concordar', 'Duvidar', 'Esquecer'], correctIndex: 1, hint: "Literalmente 'estar de acordo', parecido com o alemão 'einverstanden sein'." },
-          { type: 'translate', id: 'u9-l1-e3', promptLang: 'pt', prompt: 'Na minha opinião', acceptedAnswers: ['Meng Meenung no'], hint: "'Meenung' vem do alemão 'Meinung' (opinião)." },
+          { type: 'translate', id: 'u9-l1-e3', promptLang: 'pt', prompt: 'Na minha opinião', acceptedAnswers: ['Meng Meenung no'], hint: "'Meenung' vem do alemão 'Meinung' (opinião).", wordGlosses: { na: 'no (aqui: "Meenung no")', minha: 'Meng', opinião: 'Meenung' } },
           { type: 'multipleChoice', id: 'u9-l1-e4', promptLang: 'lu', prompt: 'Ech mengen datt dat richteg ass', options: ['Eu acho que isso está certo', 'Eu não sei se isso está certo', 'Eu não gosto disso', 'Eu concordo totalmente'], correctIndex: 0, hint: "'richteg' vem do alemão 'richtig' (certo/correto)." },
-          { type: 'translate', id: 'u9-l1-e5', promptLang: 'lu', prompt: 'Ech si net averstan', acceptedAnswers: ['Eu não concordo', 'Eu discordo'], hint: "O prefixo 'net' nega a frase, como 'not' em inglês." },
+          { type: 'translate', id: 'u9-l1-e5', promptLang: 'lu', prompt: 'Ech si net averstan', acceptedAnswers: ['Eu não concordo', 'Eu discordo'], hint: "O prefixo 'net' nega a frase, como 'not' em inglês.", wordGlosses: { si: 'sou / estou (aqui não é o pronome "ela/eles")', averstan: 'de acordo' } },
           { type: 'match', id: 'u9-l1-e6', pairs: [
             { pt: 'Achar/pensar', lu: 'mengen', hint: "Vem do alemão 'meinen'." },
             { pt: 'Concordar', lu: 'averstan sinn', hint: "Literalmente 'estar de acordo'." },
@@ -721,7 +721,7 @@ export const units: Unit[] = [
         title: 'Debates',
         exercises: [
           { type: 'multipleChoice', id: 'u10-l2-e1', promptLang: 'lu', prompt: 'en Impakt hunn', options: ['Ter um impacto', 'Ter uma ideia', 'Ter um problema', 'Ter uma solução'], correctIndex: 0, hint: "'Impakt' é um empréstimo do inglês/francês 'impact'." },
-          { type: 'translate', id: 'u10-l2-e2', promptLang: 'pt', prompt: 'A solução', acceptedAnswers: ["d'Léisung", 'Léisung'], hint: "'Léisung' vem do alemão 'Lösung' (solução)." },
+          { type: 'translate', id: 'u10-l2-e2', promptLang: 'pt', prompt: 'A solução', acceptedAnswers: ["d'Léisung", 'Léisung'], hint: "'Léisung' vem do alemão 'Lösung' (solução).", wordGlosses: { a: 'd', solução: 'Léisung' } },
           { type: 'multipleChoice', id: 'u10-l2-e3', promptLang: 'lu', prompt: "Et ass wichteg fir d'Zukunft", options: ['É importante para o futuro', 'É difícil de entender', 'É uma questão pessoal', 'É apenas uma opinião'], correctIndex: 0, hint: "'wichteg' vem do alemão 'wichtig' (importante)." },
           { type: 'translate', id: 'u10-l2-e4', promptLang: 'lu', prompt: "D'Gesellschaft ännert sech séier", acceptedAnswers: ['A sociedade muda rápido', 'A sociedade está mudando rápido'], hint: "'ännert sech' vem de 'änneren' (mudar); 'séier' significa rápido." },
           { type: 'multipleChoice', id: 'u10-l2-e5', promptLang: 'pt', prompt: 'O problema', options: ['de Problem', "d'Léisung", "d'Fro", 'de Grond'], correctIndex: 0, hint: "'Problem' é escrito igual em alemão e quase igual em português." },
@@ -813,7 +813,7 @@ export const units: Unit[] = [
         title: 'Espetáculos',
         exercises: [
           { type: 'multipleChoice', id: 'u19-l2-e1', promptLang: 'lu', prompt: 'en Theater', options: ['Um teatro', 'Um museu', 'Uma biblioteca', 'Um cinema'], correctIndex: 0, hint: "'Theater' é quase idêntico em várias línguas europeias." },
-          { type: 'translate', id: 'u19-l2-e2', promptLang: 'pt', prompt: 'Romance (livro)', acceptedAnswers: ['Roman', 'e Roman'], hint: "'Roman' vem do francês 'roman' (romance/livro de ficção)." },
+          { type: 'translate', id: 'u19-l2-e2', promptLang: 'pt', prompt: 'Romance (livro)', acceptedAnswers: ['Roman', 'e Roman'], hint: "'Roman' vem do francês 'roman' (romance/livro de ficção).", wordGlosses: { romance: 'Roman', livro: 'Roman' } },
           { type: 'fillBlank', id: 'u19-l2-e3', promptLang: 'lu', sentence: "Mir ginn haut Owend an d'___", translation: 'Nós vamos ao teatro hoje à noite', options: ['Theater', 'Ausstellung', 'Bibliothéik', 'Konscht'], correctAnswer: 'Theater', hint: "'Theater' significa teatro." },
           { type: 'translate', id: 'u19-l2-e4', promptLang: 'lu', prompt: 'Hatt molt gär Biller', acceptedAnswers: ['Ela gosta de pintar quadros'], hint: "'molt' vem de 'molen' (pintar); reaproveita 'Biller', plural de 'Bild'." },
           { type: 'multipleChoice', id: 'u19-l2-e5', promptLang: 'pt', prompt: 'Escultura', options: ['Skulptur', 'Theater', 'Roman', 'Ausstellung'], correctIndex: 0, hint: "'Skulptur' é quase idêntico em alemão e português." },
@@ -870,7 +870,7 @@ export const units: Unit[] = [
             { pt: 'No geral', lu: 'Alles an allem', hint: "Literalmente 'tudo em tudo'." },
           ] },
           { type: 'multipleChoice', id: 'u11-l2-e7', promptLang: 'lu', prompt: 'schwaarz op wäiss', options: ['Preto no branco (por escrito)', 'Do nada', 'Em segredo', 'Por acaso'], correctIndex: 0, hint: "Literalmente 'preto no branco' — usado para dizer que algo está registrado por escrito, igual à expressão em português." },
-          { type: 'translate', id: 'u11-l2-e8', promptLang: 'pt', prompt: 'Por escrito', acceptedAnswers: ['schwaarz op wäiss'], hint: "Literalmente 'preto no branco', mesma lógica da expressão em português." },
+          { type: 'translate', id: 'u11-l2-e8', promptLang: 'pt', prompt: 'Por escrito', acceptedAnswers: ['schwaarz op wäiss'], hint: "Literalmente 'preto no branco', mesma lógica da expressão em português.", wordGlosses: { por: 'schwaarz op wäiss', escrito: 'schwaarz op wäiss' } },
         ],
       },
     ],
@@ -954,7 +954,7 @@ export const units: Unit[] = [
           { type: 'translate', id: 'u21-l2-e2', promptLang: 'lu', prompt: 'All Ufank ass schwéier', acceptedAnswers: ['Todo começo é difícil'], hint: "Provérbio popular igual ao alemão 'Aller Anfang ist schwer'." },
           { type: 'fillBlank', id: 'u21-l2-e3', promptLang: 'lu', sentence: 'Mir mussen ___ hunn, alles brauch Zäit', translation: 'Nós precisamos ter paciência, tudo precisa de tempo', options: ['Geduld', 'Wourecht', 'Sënn', 'Fräiheet'], correctAnswer: 'Geduld', hint: "'Geduld' significa paciência." },
           { type: 'multipleChoice', id: 'u21-l2-e4', promptLang: 'pt', prompt: 'Sabedoria', options: ['Weisheet', 'Geduld', 'Wourecht', 'Sënn'], correctIndex: 0, hint: "'Weisheet' vem de 'weis' (sábio) + '-heet' (sufixo '-dade')." },
-          { type: 'translate', id: 'u21-l2-e5', promptLang: 'pt', prompt: 'O tempo cura tudo', acceptedAnswers: ["D'Zäit heelt alles"], hint: "'heelt' vem de 'heelen' (curar); provérbio parecido com o português." },
+          { type: 'translate', id: 'u21-l2-e5', promptLang: 'pt', prompt: 'O tempo cura tudo', acceptedAnswers: ["D'Zäit heelt alles"], hint: "'heelt' vem de 'heelen' (curar); provérbio parecido com o português.", wordGlosses: { o: 'D', tempo: 'Zäit', cura: 'heelt', tudo: 'alles' } },
           { type: 'match', id: 'u21-l2-e6', pairs: [
             { pt: 'Ter paciência', lu: 'Geduld hunn', hint: "'Geduld' = paciência." },
             { pt: 'Sabedoria', lu: 'Weisheet', hint: "'Weis' (sábio) + '-heet'." },

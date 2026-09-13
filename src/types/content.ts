@@ -17,6 +17,8 @@ export interface TranslateExercise {
   prompt: string;
   acceptedAnswers: string[];
   hint?: string;
+  /** Per-word gloss overrides, for when a word's usual meaning doesn't fit this sentence's context */
+  wordGlosses?: Record<string, string>;
 }
 
 export interface MatchExercise {

@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { GLOSSARY_LU_TO_PT, GLOSSARY_PT_TO_LU } from '../content/glossary';
 import { TranslateExercise } from '../types/content';
 import { ThemeColors, useTheme } from '../theme/theme';
 import { LanguageTag } from './LanguageTag';
+import { TappableSentence } from './TappableSentence';
 
 function normalize(text: string): string {
   return text.trim().toLowerCase();
@@ -22,6 +24,11 @@ export function ExerciseTranslate({
   const [showHint, setShowHint] = useState(false);
 
   const isCorrect = exercise.acceptedAnswers.some((a) => normalize(a) === normalize(answer));
+  const baseGlossary = exercise.promptLang === 'lu' ? GLOSSARY_LU_TO_PT : GLOSSARY_PT_TO_LU;
+  const wordGlossary = useMemo(
+    () => (exercise.wordGlosses ? { ...baseGlossary, ...exercise.wordGlosses } : baseGlossary),
+    [exercise, baseGlossary]
+  );
 
   const handleCheck = () => {
     if (answer.trim().length === 0) return;
@@ -35,8 +42,10 @@ export function ExerciseTranslate({
   return (
     <View style={styles.container}>
       <LanguageTag lang={exercise.promptLang} />
-      <Text style={styles.instruction}>Traduza a frase:</Text>
-      <Text style={styles.prompt}>{exercise.prompt}</Text>
+      <Text style={styles.instruction}>Traduza a frase: (toque numa palavra pra ver uma dica)</Text>
+      <View style={styles.promptWrapper}>
+        <TappableSentence text={exercise.prompt} glossary={wordGlossary} textStyle={styles.promptText} />
+      </View>
 
       <TextInput
         style={[
@@ -90,7 +99,8 @@ function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, padding: 20 },
     instruction: { fontSize: 14, color: colors.textSecondary, marginBottom: 8 },
-    prompt: { fontSize: 26, fontWeight: '700', marginBottom: 24, color: colors.text },
+    promptWrapper: { marginBottom: 24 },
+    promptText: { fontSize: 26, fontWeight: '700', color: colors.text },
     input: {
       borderWidth: 2,
       borderColor: colors.border,
