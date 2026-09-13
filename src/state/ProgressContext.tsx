@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
-import { ProgressState, initialProgressState, loadProgress, saveProgress } from './progressStorage';
+import {
+  ProgressState,
+  clearProgress,
+  initialProgressState,
+  loadProgress,
+  saveProgress,
+} from './progressStorage';
 
 function todayISODate(): string {
   return new Date().toISOString().slice(0, 10);
@@ -12,12 +18,15 @@ function daysBetween(a: string, b: string): number {
 
 type Action =
   | { type: 'HYDRATE'; state: ProgressState }
-  | { type: 'COMPLETE_LESSON'; lessonId: string; xpEarned: number };
+  | { type: 'COMPLETE_LESSON'; lessonId: string; xpEarned: number; wasPerfect: boolean }
+  | { type: 'RESET' };
 
 function reducer(state: ProgressState, action: Action): ProgressState {
   switch (action.type) {
     case 'HYDRATE':
       return action.state;
+    case 'RESET':
+      return initialProgressState;
     case 'COMPLETE_LESSON': {
       const today = todayISODate();
       let streak = state.streak;
@@ -35,13 +44,19 @@ function reducer(state: ProgressState, action: Action): ProgressState {
       const activeDates = state.activeDates.includes(today)
         ? state.activeDates
         : [...state.activeDates, today];
+      const perfectLessonIds =
+        action.wasPerfect && !state.perfectLessonIds.includes(action.lessonId)
+          ? [...state.perfectLessonIds, action.lessonId]
+          : state.perfectLessonIds;
       return {
         ...state,
         xp: state.xp + action.xpEarned,
         streak,
+        maxStreak: Math.max(state.maxStreak, streak),
         lastActiveDate: today,
         completedLessonIds,
         activeDates,
+        perfectLessonIds,
       };
     }
     default:
@@ -51,7 +66,8 @@ function reducer(state: ProgressState, action: Action): ProgressState {
 
 interface ProgressContextValue {
   progress: ProgressState;
-  completeLesson: (lessonId: string, xpEarned: number) => void;
+  completeLesson: (lessonId: string, xpEarned: number, wasPerfect: boolean) => void;
+  resetProgress: () => void;
   isLoaded: boolean;
 }
 
@@ -72,12 +88,17 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     if (isLoaded) saveProgress(progress);
   }, [progress, isLoaded]);
 
-  const completeLesson = (lessonId: string, xpEarned: number) => {
-    dispatch({ type: 'COMPLETE_LESSON', lessonId, xpEarned });
+  const completeLesson = (lessonId: string, xpEarned: number, wasPerfect: boolean) => {
+    dispatch({ type: 'COMPLETE_LESSON', lessonId, xpEarned, wasPerfect });
+  };
+
+  const resetProgress = () => {
+    dispatch({ type: 'RESET' });
+    clearProgress();
   };
 
   return (
-    <ProgressContext.Provider value={{ progress, completeLesson, isLoaded }}>
+    <ProgressContext.Provider value={{ progress, completeLesson, resetProgress, isLoaded }}>
       {children}
     </ProgressContext.Provider>
   );

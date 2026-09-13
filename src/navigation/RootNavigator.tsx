@@ -5,8 +5,10 @@ import React from 'react';
 import { Text, useColorScheme } from 'react-native';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LessonScreen } from '../screens/LessonScreen';
+import { PracticeScreen } from '../screens/PracticeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ResultScreen } from '../screens/ResultScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
 import { StreakScreen } from '../screens/StreakScreen';
 import { darkTheme, lightTheme } from '../theme/theme';
 import { MainTabParamList, RootStackParamList } from './types';
@@ -21,6 +23,11 @@ function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{ tabBarLabel: 'Aprender', tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text> }}
+      />
+      <Tab.Screen
+        name="Practice"
+        component={PracticeScreen}
+        options={{ tabBarLabel: 'Praticar', tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏋️</Text> }}
       />
       <Tab.Screen
         name="Profile"
@@ -53,6 +60,7 @@ export function RootNavigator() {
         <Stack.Screen name="Lesson" component={LessonScreen} options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="Result" component={ResultScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
         <Stack.Screen name="Streak" component={StreakScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="Settings" component={SettingsScreen} options={{ presentation: 'modal' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

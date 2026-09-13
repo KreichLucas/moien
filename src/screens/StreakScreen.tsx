@@ -1,9 +1,11 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ACHIEVEMENTS } from '../content/achievements';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
 import { ThemeColors, useTheme } from '../theme/theme';
+import { units } from '../content/units';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Streak'>;
 
@@ -35,6 +37,9 @@ export function StreakScreen({ navigation }: Props) {
     () => progress.activeDates.filter((d) => d.startsWith(monthPrefix)).length,
     [progress.activeDates, monthPrefix]
   );
+
+  const streakSociety = ACHIEVEMENTS.find((a) => a.id === 'streak_7')!;
+  const streakSocietyUnlocked = streakSociety.isUnlocked(progress, units);
 
   const cells: (number | null)[] = [
     ...Array.from({ length: firstWeekday }, () => null),
@@ -135,10 +140,14 @@ export function StreakScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.achievementCard}>
-        <Text style={styles.achievementIcon}>🔒</Text>
+        <Text style={styles.achievementIcon}>{streakSocietyUnlocked ? '🔥' : '🔒'}</Text>
         <View style={styles.achievementTextWrap}>
           <Text style={styles.achievementTitle}>Sociedade da Chama Acesa</Text>
-          <Text style={styles.achievementText}>Consiga uma ofensiva de 7 dias para desbloquear</Text>
+          <Text style={styles.achievementText}>
+            {streakSocietyUnlocked
+              ? 'Desbloqueada! Sua maior ofensiva foi de ' + progress.maxStreak + ' dias.'
+              : 'Consiga uma ofensiva de 7 dias para desbloquear'}
+          </Text>
         </View>
       </View>
     </ScrollView>

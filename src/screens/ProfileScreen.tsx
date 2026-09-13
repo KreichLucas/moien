@@ -1,19 +1,32 @@
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { getAchievementsStatus } from '../content/achievements';
 import { getLevelProgress } from '../content/levels';
 import { units } from '../content/units';
+import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
 import { ThemeColors, useTheme } from '../theme/theme';
 
+type Nav = NativeStackNavigationProp<RootStackParamList>;
+
 export function ProfileScreen() {
+  const navigation = useNavigation<Nav>();
   const { progress } = useProgress();
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const totalLessons = units.flatMap((u) => u.lessons).length;
   const levelProgress = getLevelProgress(units, progress.completedLessonIds);
+  const achievements = useMemo(() => getAchievementsStatus(progress, units), [progress]);
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Pressable style={styles.settingsButton} onPress={() => navigation.navigate('Settings')}>
+        <Text style={styles.settingsIcon}>⚙️</Text>
+      </Pressable>
+
       <Text style={styles.avatar}>🧑‍🎓</Text>
       <Text style={styles.title}>Seu progresso</Text>
 
@@ -41,13 +54,33 @@ export function ProfileScreen() {
           {levelProgress.isMaxLevel ? 'Nível máximo alcançado' : 'Nível atual em progresso'}
         </Text>
       </View>
-    </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Conquistas</Text>
+        <Text style={styles.sectionCount}>
+          {unlockedCount}/{achievements.length}
+        </Text>
+      </View>
+      <View style={styles.badgeGrid}>
+        {achievements.map((a) => (
+          <View key={a.id} style={[styles.badge, !a.unlocked && styles.badgeLocked]}>
+            <Text style={styles.badgeIcon}>{a.unlocked ? a.icon : '🔒'}</Text>
+            <Text style={styles.badgeTitle} numberOfLines={2}>
+              {a.title}
+            </Text>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background, padding: 20, alignItems: 'center' },
+    container: { flex: 1, backgroundColor: colors.background },
+    content: { padding: 20, alignItems: 'center', paddingBottom: 60 },
+    settingsButton: { position: 'absolute', top: 20, right: 20, padding: 4 },
+    settingsIcon: { fontSize: 22 },
     avatar: { fontSize: 64, marginTop: 20 },
     title: { fontSize: 22, fontWeight: '800', color: colors.text, marginVertical: 16 },
     statsRow: { flexDirection: 'row', gap: 12, width: '100%' },
@@ -68,5 +101,32 @@ function makeStyles(colors: ThemeColors) {
     },
     statValue: { fontSize: 24, fontWeight: '800', color: colors.text },
     statLabel: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
+    sectionHeader: {
+      width: '100%',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 28,
+      marginBottom: 12,
+    },
+    sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+    sectionCount: { fontSize: 13, fontWeight: '700', color: colors.textSecondary },
+    badgeGrid: {
+      width: '100%',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+    },
+    badge: {
+      width: '31%',
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 6,
+      alignItems: 'center',
+    },
+    badgeLocked: { opacity: 0.5 },
+    badgeIcon: { fontSize: 26, marginBottom: 6 },
+    badgeTitle: { fontSize: 11, fontWeight: '700', color: colors.text, textAlign: 'center' },
   });
 }

@@ -11,6 +11,7 @@ import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { ThemeColors, useTheme } from '../theme/theme';
 import { useProgress } from '../state/ProgressContext';
+import { playComplete, playCorrect, playWrong } from '../utils/sounds';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Lesson'>;
 
@@ -29,12 +30,17 @@ export function LessonScreen({ route, navigation }: Props) {
 
   const finishLesson = (finalMistakes: number) => {
     const correctCount = total - finalMistakes;
-    const xpEarned = 10 + (finalMistakes === 0 ? 5 : 0);
-    completeLesson(lessonId, xpEarned);
+    const wasPerfect = finalMistakes === 0;
+    const xpEarned = 10 + (wasPerfect ? 5 : 0);
+    completeLesson(lessonId, xpEarned, wasPerfect);
+    playComplete();
     navigation.replace('Result', { xpEarned, correctCount, totalCount: total });
   };
 
   const handleExerciseComplete = (hadMistake: boolean) => {
+    if (hadMistake) playWrong();
+    else playCorrect();
+
     const newMistakes = mistakes + (hadMistake ? 1 : 0);
     setMistakes(newMistakes);
 

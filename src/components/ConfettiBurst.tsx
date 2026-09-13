@@ -51,7 +51,7 @@ function ConfettiPiece({ delay }: { delay: number }) {
 export function ConfettiBurst() {
   const particles = useMemo(() => Array.from({ length: PARTICLE_COUNT }), []);
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
       {particles.map((_, i) => (
         <ConfettiPiece key={i} delay={i * 25} />
       ))}
