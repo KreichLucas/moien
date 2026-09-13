@@ -136,11 +136,14 @@ function makeStyles(colors: ThemeColors) {
     cardWrong: { borderColor: colors.wrongBorder, backgroundColor: colors.wrongBg },
     cardText: { fontSize: 15, color: colors.text, fontWeight: '600', textAlign: 'center' },
     hintBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
       backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 14,
       marginTop: 16,
     },
-    hintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
+    hintText: { flex: 1, fontSize: 14, color: colors.text, lineHeight: 20 },
   });
 }

@@ -1,8 +1,10 @@
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ConfettiBurst } from '../components/ConfettiBurst';
 import { RootStackParamList } from '../navigation/types';
 import { ThemeColors, useTheme } from '../theme/theme';
+import { useAnimatedNumber } from '../utils/useAnimatedNumber';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
 
@@ -10,17 +12,19 @@ export function ResultScreen({ route, navigation }: Props) {
   const { xpEarned, correctCount, totalCount } = route.params;
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
+  const animatedXp = useAnimatedNumber(xpEarned, 900, { animateFrom: 0 });
 
   const handleContinue = () => navigation.popToTop();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.correctBg }]}>
+      <ConfettiBurst />
       <Text style={styles.emoji}>🎉</Text>
       <Text style={styles.title}>Lição completa!</Text>
 
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>⭐ {xpEarned}</Text>
+          <Text style={styles.statValue}>⭐ {animatedXp}</Text>
           <Text style={styles.statLabel}>XP ganho</Text>
         </View>
         <View style={styles.statCard}>

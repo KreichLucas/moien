@@ -8,6 +8,7 @@ export interface MultipleChoiceExercise {
   options: string[];
   correctIndex: number;
   hint?: string;
+  wordGlosses?: Record<string, string>;
 }
 
 export interface TranslateExercise {
@@ -37,6 +38,7 @@ export interface FillBlankExercise {
   options: string[];
   correctAnswer: string;
   hint?: string;
+  wordGlosses?: Record<string, string>;
 }
 
 export type Exercise = MultipleChoiceExercise | TranslateExercise | MatchExercise | FillBlankExercise;

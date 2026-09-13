@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { GLOSSARY_LU_TO_PT, GLOSSARY_PT_TO_LU } from '../content/glossary';
 import { MultipleChoiceExercise } from '../types/content';
 import { ThemeColors, useTheme } from '../theme/theme';
 import { LanguageTag } from './LanguageTag';
+import { TappableSentence } from './TappableSentence';
 
 export function ExerciseMultipleChoice({
   exercise,
@@ -16,9 +18,15 @@ export function ExerciseMultipleChoice({
   const [selected, setSelected] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [wordHint, setWordHint] = useState<{ word: string; gloss: string } | null>(null);
 
   const isCorrect = selected === exercise.correctIndex;
   const wrongAndChecked = checked && !isCorrect;
+  const baseGlossary = exercise.promptLang === 'lu' ? GLOSSARY_LU_TO_PT : GLOSSARY_PT_TO_LU;
+  const wordGlossary = useMemo(
+    () => (exercise.wordGlosses ? { ...baseGlossary, ...exercise.wordGlosses } : baseGlossary),
+    [exercise, baseGlossary]
+  );
 
   const handleCheck = () => {
     if (selected === null) return;
@@ -32,7 +40,20 @@ export function ExerciseMultipleChoice({
   return (
     <View style={styles.container}>
       <LanguageTag lang={exercise.promptLang} />
-      <Text style={styles.prompt}>{exercise.prompt}</Text>
+      <View style={styles.promptWrapper}>
+        <TappableSentence
+          text={exercise.prompt}
+          glossary={wordGlossary}
+          textStyle={styles.promptText}
+          activeWord={wordHint?.word ?? null}
+          onWordPress={(word, gloss) => setWordHint((w) => (w?.word === word ? null : { word, gloss }))}
+        />
+      </View>
+      {wordHint && (
+        <View style={styles.wordHintBox}>
+          <Text style={styles.wordHintText}>{wordHint.gloss}</Text>
+        </View>
+      )}
 
       {exercise.options.map((option, index) => {
         const isSelected = selected === index;
@@ -94,7 +115,15 @@ export function ExerciseMultipleChoice({
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, padding: 20 },
-    prompt: { fontSize: 26, fontWeight: '700', marginBottom: 24, color: colors.text },
+    promptWrapper: { marginBottom: 12 },
+    promptText: { fontSize: 26, fontWeight: '700', color: colors.text },
+    wordHintBox: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 16,
+    },
+    wordHintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
     option: {
       borderWidth: 2,
       borderColor: colors.border,
@@ -108,12 +137,15 @@ function makeStyles(colors: ThemeColors) {
     optionText: { fontSize: 17, color: colors.text },
     hintTap: { fontSize: 12, color: colors.accent, fontWeight: '600', marginTop: 6 },
     hintBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
       backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 14,
       marginBottom: 12,
     },
-    hintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
+    hintText: { flex: 1, fontSize: 14, color: colors.text, lineHeight: 20 },
     footer: { marginTop: 'auto' },
     button: {
       backgroundColor: colors.primary,

@@ -22,6 +22,7 @@ export function ExerciseTranslate({
   const [answer, setAnswer] = useState('');
   const [checked, setChecked] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [wordHint, setWordHint] = useState<{ word: string; gloss: string } | null>(null);
 
   const isCorrect = exercise.acceptedAnswers.some((a) => normalize(a) === normalize(answer));
   const baseGlossary = exercise.promptLang === 'lu' ? GLOSSARY_LU_TO_PT : GLOSSARY_PT_TO_LU;
@@ -44,8 +45,19 @@ export function ExerciseTranslate({
       <LanguageTag lang={exercise.promptLang} />
       <Text style={styles.instruction}>Traduza a frase: (toque numa palavra pra ver uma dica)</Text>
       <View style={styles.promptWrapper}>
-        <TappableSentence text={exercise.prompt} glossary={wordGlossary} textStyle={styles.promptText} />
+        <TappableSentence
+          text={exercise.prompt}
+          glossary={wordGlossary}
+          textStyle={styles.promptText}
+          activeWord={wordHint?.word ?? null}
+          onWordPress={(word, gloss) => setWordHint((w) => (w?.word === word ? null : { word, gloss }))}
+        />
       </View>
+      {wordHint && (
+        <View style={styles.wordHintBox}>
+          <Text style={styles.wordHintText}>{wordHint.gloss}</Text>
+        </View>
+      )}
 
       <TextInput
         style={[
@@ -99,8 +111,15 @@ function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, padding: 20 },
     instruction: { fontSize: 14, color: colors.textSecondary, marginBottom: 8 },
-    promptWrapper: { marginBottom: 24 },
+    promptWrapper: { marginBottom: 12 },
     promptText: { fontSize: 26, fontWeight: '700', color: colors.text },
+    wordHintBox: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 12,
+    },
+    wordHintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
     input: {
       borderWidth: 2,
       borderColor: colors.border,
@@ -113,12 +132,15 @@ function makeStyles(colors: ThemeColors) {
     inputWrong: { borderColor: colors.wrongBorder, backgroundColor: colors.wrongBg },
     correction: { marginTop: 10, color: colors.danger, fontWeight: '600' },
     hintBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
       backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 14,
       marginTop: 10,
     },
-    hintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
+    hintText: { flex: 1, fontSize: 14, color: colors.text, lineHeight: 20 },
     footer: { marginTop: 'auto' },
     button: {
       backgroundColor: colors.primary,

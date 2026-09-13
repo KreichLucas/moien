@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { GLOSSARY_LU_TO_PT, GLOSSARY_PT_TO_LU } from '../content/glossary';
 import { FillBlankExercise } from '../types/content';
 import { ThemeColors, useTheme } from '../theme/theme';
 import { LanguageTag } from './LanguageTag';
+import { TappableSentence } from './TappableSentence';
 import { shuffle } from '../utils/shuffle';
 
 export function ExerciseFillBlank({
@@ -19,11 +21,17 @@ export function ExerciseFillBlank({
   const [selected, setSelected] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [showHint, setShowHint] = useState(false);
+  const [wordHint, setWordHint] = useState<{ word: string; gloss: string } | null>(null);
 
   const isCorrect = selected === exercise.correctAnswer;
   const wrongAndChecked = checked && !isCorrect;
 
   const [before, after] = exercise.sentence.split('___');
+  const baseGlossary = exercise.promptLang === 'lu' ? GLOSSARY_LU_TO_PT : GLOSSARY_PT_TO_LU;
+  const wordGlossary = useMemo(
+    () => (exercise.wordGlosses ? { ...baseGlossary, ...exercise.wordGlosses } : baseGlossary),
+    [exercise, baseGlossary]
+  );
 
   const handleCheck = () => {
     if (!selected) return;
@@ -41,7 +49,13 @@ export function ExerciseFillBlank({
       <Text style={styles.translation}>{exercise.translation}</Text>
 
       <View style={styles.sentenceRow}>
-        <Text style={styles.sentence}>{before}</Text>
+        <TappableSentence
+          text={before}
+          glossary={wordGlossary}
+          textStyle={styles.sentence}
+          activeWord={wordHint?.word ?? null}
+          onWordPress={(word, gloss) => setWordHint((w) => (w?.word === word ? null : { word, gloss }))}
+        />
         <View
           style={[
             styles.blank,
@@ -50,8 +64,19 @@ export function ExerciseFillBlank({
         >
           <Text style={styles.blankText}>{selected ?? ''}</Text>
         </View>
-        <Text style={styles.sentence}>{after}</Text>
+        <TappableSentence
+          text={after}
+          glossary={wordGlossary}
+          textStyle={styles.sentence}
+          activeWord={wordHint?.word ?? null}
+          onWordPress={(word, gloss) => setWordHint((w) => (w?.word === word ? null : { word, gloss }))}
+        />
       </View>
+      {wordHint && (
+        <View style={styles.wordHintBox}>
+          <Text style={styles.wordHintText}>{wordHint.gloss}</Text>
+        </View>
+      )}
 
       <View style={styles.bank}>
         {wordBank.map((word) => {
@@ -117,8 +142,15 @@ function makeStyles(colors: ThemeColors) {
     container: { flex: 1, padding: 20 },
     instruction: { fontSize: 14, color: colors.textSecondary, marginBottom: 4 },
     translation: { fontSize: 14, color: colors.textSecondary, marginBottom: 20, fontStyle: 'italic' },
-    sentenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 28 },
+    sentenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 },
     sentence: { fontSize: 22, fontWeight: '700', color: colors.text },
+    wordHintBox: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 20,
+    },
+    wordHintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
     blank: {
       minWidth: 70,
       borderBottomWidth: 2,
@@ -145,12 +177,15 @@ function makeStyles(colors: ThemeColors) {
     chipText: { fontSize: 16, color: colors.text, fontWeight: '600' },
     hintTap: { fontSize: 12, color: colors.accent, fontWeight: '600', marginTop: 16 },
     hintBox: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
       backgroundColor: colors.surface,
       borderRadius: 12,
       padding: 14,
       marginTop: 10,
     },
-    hintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
+    hintText: { flex: 1, fontSize: 14, color: colors.text, lineHeight: 20 },
     footer: { marginTop: 'auto' },
     button: {
       backgroundColor: colors.primary,
