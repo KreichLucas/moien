@@ -7,6 +7,7 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { LessonScreen } from '../screens/LessonScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ResultScreen } from '../screens/ResultScreen';
+import { StreakScreen } from '../screens/StreakScreen';
 import { darkTheme, lightTheme } from '../theme/theme';
 import { MainTabParamList, RootStackParamList } from './types';
 
@@ -51,6 +52,7 @@ export function RootNavigator() {
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="Lesson" component={LessonScreen} options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="Result" component={ResultScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
+        <Stack.Screen name="Streak" component={StreakScreen} options={{ presentation: 'modal' }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

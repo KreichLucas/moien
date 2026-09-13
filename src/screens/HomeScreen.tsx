@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useMemo, useRef, useState } from 'react';
-import { Animated, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LessonNode } from '../components/LessonNode';
 import { LessonStartModal } from '../components/LessonStartModal';
 import { StreakCalendar } from '../components/StreakCalendar';
@@ -51,13 +51,15 @@ export function HomeScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.topBar}>
-        <Text style={styles.streak}>🔥 {progress.streak}</Text>
+        <Pressable onPress={() => navigation.navigate('Streak')} hitSlop={8}>
+          <Text style={styles.streak}>🔥 {progress.streak}</Text>
+        </Pressable>
         <Text style={styles.xp}>⭐ {animatedXp} XP</Text>
       </View>
 
-      <View style={styles.streakCard}>
+      <Pressable style={styles.streakCard} onPress={() => navigation.navigate('Streak')}>
         <StreakCalendar activeDates={progress.activeDates} />
-      </View>
+      </Pressable>
 
       <View style={styles.levelCard}>
         <Text style={styles.levelCardTitle}>
