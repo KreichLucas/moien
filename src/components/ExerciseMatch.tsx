@@ -1,0 +1,146 @@
+import React, { useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { MatchExercise } from '../types/content';
+import { ThemeColors, useTheme } from '../theme/theme';
+import { shuffle } from '../utils/shuffle';
+
+export function ExerciseMatch({
+  exercise,
+  onComplete,
+}: {
+  exercise: MatchExercise;
+  onComplete: (hadMistake: boolean) => void;
+}) {
+  const colors = useTheme();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const ptWords = useMemo(() => shuffle(exercise.pairs.map((p) => p.pt)), [exercise]);
+  const luWords = useMemo(() => shuffle(exercise.pairs.map((p) => p.lu)), [exercise]);
+  const correctMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    exercise.pairs.forEach((p) => (map[p.pt] = p.lu));
+    return map;
+  }, [exercise]);
+
+  const [matched, setMatched] = useState<Set<string>>(new Set());
+  const [selectedPt, setSelectedPt] = useState<string | null>(null);
+  const [selectedLu, setSelectedLu] = useState<string | null>(null);
+  const [wrongPair, setWrongPair] = useState<{ pt: string; lu: string } | null>(null);
+  const [mistakeHint, setMistakeHint] = useState<string | null>(null);
+  const hadMistake = useRef(false);
+
+  const isDone = matched.size === exercise.pairs.length * 2;
+
+  React.useEffect(() => {
+    if (isDone) {
+      const timeout = setTimeout(() => onComplete(hadMistake.current), 500);
+      return () => clearTimeout(timeout);
+    }
+  }, [isDone]);
+
+  const tryMatch = (pt: string | null, lu: string | null) => {
+    if (!pt || !lu) return;
+    if (correctMap[pt] === lu) {
+      setMatched((prev) => new Set(prev).add(pt).add(lu));
+      setSelectedPt(null);
+      setSelectedLu(null);
+      setMistakeHint(null);
+    } else {
+      hadMistake.current = true;
+      setWrongPair({ pt, lu });
+      const hint = exercise.pairs.find((p) => p.pt === pt)?.hint;
+      if (hint) setMistakeHint(hint);
+      setTimeout(() => {
+        setWrongPair(null);
+        setSelectedPt(null);
+        setSelectedLu(null);
+      }, 400);
+    }
+  };
+
+  const handlePickPt = (word: string) => {
+    if (matched.has(word) || wrongPair) return;
+    setSelectedPt(word);
+    tryMatch(word, selectedLu);
+  };
+
+  const handlePickLu = (word: string) => {
+    if (matched.has(word) || wrongPair) return;
+    setSelectedLu(word);
+    tryMatch(selectedPt, word);
+  };
+
+  const cardStyle = (word: string, isPt: boolean) => {
+    if (matched.has(word)) return styles.cardMatched;
+    if (wrongPair && ((isPt && wrongPair.pt === word) || (!isPt && wrongPair.lu === word))) {
+      return styles.cardWrong;
+    }
+    if ((isPt && selectedPt === word) || (!isPt && selectedLu === word)) return styles.cardSelected;
+    return null;
+  };
+
+  return (
+    <View style={styles.container}>
+      <Text style={styles.instruction}>Associe as palavras em português e luxemburguês</Text>
+      <View style={styles.columns}>
+        <View style={styles.column}>
+          {ptWords.map((word) => (
+            <Pressable
+              key={word}
+              style={[styles.card, cardStyle(word, true)]}
+              disabled={matched.has(word)}
+              onPress={() => handlePickPt(word)}
+            >
+              <Text style={styles.cardText}>{word}</Text>
+            </Pressable>
+          ))}
+        </View>
+        <View style={styles.column}>
+          {luWords.map((word) => (
+            <Pressable
+              key={word}
+              style={[styles.card, cardStyle(word, false)]}
+              disabled={matched.has(word)}
+              onPress={() => handlePickLu(word)}
+            >
+              <Text style={styles.cardText}>{word}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      {mistakeHint && (
+        <Pressable style={styles.hintBox} onPress={() => setMistakeHint(null)}>
+          <Text style={styles.hintText}>💡 {mistakeHint}</Text>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+function makeStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, padding: 20 },
+    instruction: { fontSize: 16, color: colors.text, marginBottom: 20, fontWeight: '600' },
+    columns: { flexDirection: 'row', gap: 12 },
+    column: { flex: 1, gap: 10 },
+    card: {
+      borderWidth: 2,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 10,
+      alignItems: 'center',
+    },
+    cardSelected: { borderColor: colors.selectedBorder, backgroundColor: colors.selectedBg },
+    cardMatched: { borderColor: colors.correctBorder, backgroundColor: colors.correctBg, opacity: 0.5 },
+    cardWrong: { borderColor: colors.wrongBorder, backgroundColor: colors.wrongBg },
+    cardText: { fontSize: 15, color: colors.text, fontWeight: '600', textAlign: 'center' },
+    hintBox: {
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      padding: 14,
+      marginTop: 16,
+    },
+    hintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
+  });
+}
