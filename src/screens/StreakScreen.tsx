@@ -4,7 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { ACHIEVEMENTS } from '../content/achievements';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { units } from '../content/units';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Streak'>;
@@ -95,13 +95,13 @@ export function StreakScreen({ navigation }: Props) {
 
       <View style={styles.calendarCard}>
         <View style={styles.monthRow}>
-          <Pressable style={styles.monthArrowHit} onPress={goPrevMonth}>
+          <Pressable style={({ pressed }) => [styles.monthArrowHit, pressedStyle(pressed)]} onPress={goPrevMonth}>
             <Text style={styles.monthArrow}>‹</Text>
           </Pressable>
           <Text style={styles.monthLabel}>
             {MONTH_LABELS[viewMonth]} de {viewYear}
           </Text>
-          <Pressable style={styles.monthArrowHit} onPress={goNextMonth}>
+          <Pressable style={({ pressed }) => [styles.monthArrowHit, pressedStyle(pressed)]} onPress={goNextMonth}>
             <Text style={styles.monthArrow}>›</Text>
           </Pressable>
         </View>
@@ -178,6 +178,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 16,
       padding: 16,
       alignItems: 'center',
+      ...cardShadow(colors),
     },
     statValue: { fontSize: 20, fontWeight: '800', color: colors.text },
     statLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
@@ -186,6 +187,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 16,
       padding: 16,
       marginBottom: 20,
+      ...cardShadow(colors),
     },
     monthRow: {
       flexDirection: 'row',
@@ -224,6 +226,7 @@ function makeStyles(colors: ThemeColors) {
       backgroundColor: colors.surface,
       borderRadius: 16,
       padding: 16,
+      ...cardShadow(colors),
     },
     achievementIcon: { fontSize: 28 },
     achievementTextWrap: { flex: 1 },

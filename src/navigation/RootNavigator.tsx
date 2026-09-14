@@ -10,29 +10,52 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { ResultScreen } from '../screens/ResultScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { StreakScreen } from '../screens/StreakScreen';
-import { darkTheme, lightTheme } from '../theme/theme';
+import { ThemeColors, darkTheme, lightTheme, useTheme } from '../theme/theme';
 import { MainTabParamList, RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
+function tabIcon(emoji: string) {
+  return ({ focused }: { focused: boolean }) => (
+    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>{emoji}</Text>
+  );
+}
+
 function MainTabs() {
+  const colors = useTheme();
+
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }}>
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '700' },
+        tabBarStyle: {
+          backgroundColor: colors.background,
+          borderTopColor: colors.border,
+          borderTopWidth: 1,
+          height: 62,
+          paddingTop: 8,
+          paddingBottom: 8,
+        },
+      }}
+    >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ tabBarLabel: 'Aprender', tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏠</Text> }}
+        options={{ tabBarLabel: 'Aprender', tabBarIcon: tabIcon('🏠') }}
       />
       <Tab.Screen
         name="Practice"
         component={PracticeScreen}
-        options={{ tabBarLabel: 'Praticar', tabBarIcon: () => <Text style={{ fontSize: 20 }}>🏋️</Text> }}
+        options={{ tabBarLabel: 'Praticar', tabBarIcon: tabIcon('🏋️') }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{ tabBarLabel: 'Perfil', tabBarIcon: () => <Text style={{ fontSize: 20 }}>🧑‍🎓</Text> }}
+        options={{ tabBarLabel: 'Perfil', tabBarIcon: tabIcon('🧑‍🎓') }}
       />
     </Tab.Navigator>
   );
@@ -40,7 +63,7 @@ function MainTabs() {
 
 export function RootNavigator() {
   const scheme = useColorScheme();
-  const colors = scheme === 'dark' ? darkTheme : lightTheme;
+  const colors: ThemeColors = scheme === 'dark' ? darkTheme : lightTheme;
   const navigationTheme = {
     ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
     colors: {

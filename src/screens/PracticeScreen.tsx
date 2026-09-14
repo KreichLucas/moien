@@ -7,7 +7,7 @@ import { buildPathUnits } from '../content/path';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { Lesson } from '../types/content';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -55,7 +55,7 @@ export function PracticeScreen() {
               {unit.lessons.map((lesson) => (
                 <Pressable
                   key={lesson.id}
-                  style={styles.lessonCard}
+                  style={({ pressed }) => [styles.lessonCard, pressedStyle(pressed)]}
                   onPress={() => setSelectedLesson(lesson)}
                 >
                   <Text style={styles.lessonIcon}>✓</Text>
@@ -98,6 +98,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 14,
       padding: 14,
       alignItems: 'flex-start',
+      ...cardShadow(colors),
     },
     lessonIcon: {
       fontSize: 16,

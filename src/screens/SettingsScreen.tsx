@@ -3,7 +3,7 @@ import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
@@ -31,7 +31,10 @@ export function SettingsScreen({ navigation }: Props) {
 
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Progresso</Text>
-        <Pressable style={styles.dangerRow} onPress={() => setConfirmVisible(true)}>
+        <Pressable
+          style={({ pressed }) => [styles.dangerRow, pressedStyle(pressed)]}
+          onPress={() => setConfirmVisible(true)}
+        >
           <Text style={styles.dangerText}>Resetar progresso</Text>
           <Text style={styles.chevron}>›</Text>
         </Pressable>
@@ -51,7 +54,10 @@ export function SettingsScreen({ navigation }: Props) {
               Essa ação não pode ser desfeita. Você vai perder seu XP, ofensiva, lições completas e
               conquistas.
             </Text>
-            <Pressable style={styles.cardDangerButton} onPress={handleConfirmReset}>
+            <Pressable
+              style={({ pressed }) => [styles.cardDangerButton, pressedStyle(pressed)]}
+              onPress={handleConfirmReset}
+            >
               <Text style={styles.cardDangerButtonText}>SIM, RESETAR</Text>
             </Pressable>
             <Pressable style={styles.cardCancelButton} onPress={() => setConfirmVisible(false)}>
@@ -93,6 +99,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 14,
       paddingVertical: 16,
       paddingHorizontal: 16,
+      ...cardShadow(colors),
     },
     dangerText: { fontSize: 15, fontWeight: '700', color: colors.danger },
     chevron: { fontSize: 18, color: colors.textSecondary },
@@ -113,6 +120,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 20,
       padding: 24,
       alignItems: 'center',
+      ...cardShadow(colors),
     },
     cardIcon: { fontSize: 32, marginBottom: 12 },
     cardTitle: { fontSize: 18, fontWeight: '800', color: colors.text, textAlign: 'center' },

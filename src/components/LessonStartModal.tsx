@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 
 export function LessonStartModal({
   visible,
@@ -32,7 +32,7 @@ export function LessonStartModal({
           <View style={styles.xpPill}>
             <Text style={styles.xpText}>⭐ +10 XP</Text>
           </View>
-          <Pressable style={styles.button} onPress={onStart}>
+          <Pressable style={({ pressed }) => [styles.button, pressedStyle(pressed)]} onPress={onStart}>
             <Text style={styles.buttonText}>COMEÇAR</Text>
           </Pressable>
         </Pressable>
@@ -57,6 +57,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 20,
       padding: 24,
       alignItems: 'center',
+      ...cardShadow(colors),
     },
     icon: {
       fontSize: 32,
@@ -86,6 +87,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 14,
       paddingVertical: 14,
       alignItems: 'center',
+      ...cardShadow(colors),
     },
     buttonText: { color: colors.buttonTextOnPrimary, fontWeight: '700', fontSize: 16, letterSpacing: 0.5 },
   });

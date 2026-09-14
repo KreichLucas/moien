@@ -7,7 +7,7 @@ import { getLevelProgress } from '../content/levels';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -23,7 +23,10 @@ export function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Pressable style={styles.settingsButton} onPress={() => navigation.navigate('Settings')}>
+      <Pressable
+        style={({ pressed }) => [styles.settingsButton, pressedStyle(pressed)]}
+        onPress={() => navigation.navigate('Settings')}
+      >
         <Text style={styles.settingsIcon}>⚙️</Text>
       </Pressable>
 
@@ -63,7 +66,7 @@ export function ProfileScreen() {
       </View>
       <View style={styles.badgeGrid}>
         {achievements.map((a) => (
-          <View key={a.id} style={[styles.badge, !a.unlocked && styles.badgeLocked]}>
+          <View key={a.id} style={[styles.badge, a.unlocked ? styles.badgeUnlocked : styles.badgeLocked]}>
             <Text style={styles.badgeIcon}>{a.unlocked ? a.icon : '🔒'}</Text>
             <Text style={styles.badgeTitle} numberOfLines={2}>
               {a.title}
@@ -90,6 +93,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 16,
       padding: 20,
       alignItems: 'center',
+      ...cardShadow(colors),
     },
     statCardFull: {
       width: '100%',
@@ -98,6 +102,7 @@ function makeStyles(colors: ThemeColors) {
       padding: 20,
       alignItems: 'center',
       marginTop: 12,
+      ...cardShadow(colors),
     },
     statValue: { fontSize: 24, fontWeight: '800', color: colors.text },
     statLabel: { fontSize: 13, color: colors.textSecondary, marginTop: 4 },
@@ -124,6 +129,13 @@ function makeStyles(colors: ThemeColors) {
       paddingVertical: 14,
       paddingHorizontal: 6,
       alignItems: 'center',
+      borderWidth: 2,
+      borderColor: 'transparent',
+    },
+    badgeUnlocked: {
+      borderColor: colors.primary,
+      backgroundColor: colors.correctBg,
+      ...cardShadow(colors),
     },
     badgeLocked: { opacity: 0.5 },
     badgeIcon: { fontSize: 26, marginBottom: 6 },

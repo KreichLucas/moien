@@ -19,6 +19,9 @@ export interface ThemeColors {
   buttonTextOnPrimary: string;
   streakActiveBg: string;
   streakActiveBorder: string;
+  shadowOpacity: number;
+  shadowRadius: number;
+  elevation: number;
 }
 
 export const lightTheme: ThemeColors = {
@@ -40,6 +43,9 @@ export const lightTheme: ThemeColors = {
   buttonTextOnPrimary: '#FFFFFF',
   streakActiveBg: '#FFECC7',
   streakActiveBorder: '#FF9600',
+  shadowOpacity: 0.08,
+  shadowRadius: 10,
+  elevation: 2,
 };
 
 export const darkTheme: ThemeColors = {
@@ -61,9 +67,31 @@ export const darkTheme: ThemeColors = {
   buttonTextOnPrimary: '#FFFFFF',
   streakActiveBg: '#3D2A0A',
   streakActiveBorder: '#FF9600',
+  shadowOpacity: 0.5,
+  shadowRadius: 12,
+  elevation: 5,
 };
 
 export function useTheme(): ThemeColors {
   const scheme = useColorScheme();
   return scheme === 'dark' ? darkTheme : lightTheme;
+}
+
+/** A soft drop shadow for elevated cards, tuned per theme (subtler in light mode, more visible in dark mode). */
+export function cardShadow(colors: ThemeColors) {
+  return {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: colors.shadowOpacity,
+    shadowRadius: colors.shadowRadius,
+    elevation: colors.elevation,
+  } as const;
+}
+
+/** Subtle press feedback (shrink + fade) for Pressable's function-style `style` prop. */
+export function pressedStyle(pressed: boolean) {
+  return {
+    opacity: pressed ? 0.8 : 1,
+    transform: [{ scale: pressed ? 0.97 : 1 }],
+  };
 }

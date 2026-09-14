@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ConfettiBurst } from '../components/ConfettiBurst';
 import { RootStackParamList } from '../navigation/types';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { useAnimatedNumber } from '../utils/useAnimatedNumber';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
@@ -35,7 +35,10 @@ export function ResultScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      <Pressable style={[styles.button, { backgroundColor: colors.primary }]} onPress={handleContinue}>
+      <Pressable
+        style={({ pressed }) => [styles.button, { backgroundColor: colors.primary }, pressedStyle(pressed)]}
+        onPress={handleContinue}
+      >
         <Text style={styles.buttonText}>CONTINUAR</Text>
       </Pressable>
     </View>
@@ -48,10 +51,24 @@ function makeStyles(colors: ThemeColors) {
     emoji: { fontSize: 72, marginBottom: 16 },
     title: { fontSize: 24, fontWeight: '800', color: colors.text, marginBottom: 24, textAlign: 'center' },
     statsRow: { flexDirection: 'row', gap: 16, marginBottom: 40, width: '100%' },
-    statCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.4)', borderRadius: 16, padding: 20, alignItems: 'center' },
+    statCard: {
+      flex: 1,
+      backgroundColor: 'rgba(255,255,255,0.4)',
+      borderRadius: 16,
+      padding: 20,
+      alignItems: 'center',
+      ...cardShadow(colors),
+    },
     statValue: { fontSize: 22, fontWeight: '800', color: colors.text },
     statLabel: { fontSize: 13, color: colors.text, opacity: 0.7, marginTop: 4 },
-    button: { width: '100%', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 'auto' },
+    button: {
+      width: '100%',
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginTop: 'auto',
+      ...cardShadow(colors),
+    },
     buttonText: { color: colors.buttonTextOnPrimary, fontWeight: '700', fontSize: 16, letterSpacing: 0.5 },
   });
 }

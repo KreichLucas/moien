@@ -10,7 +10,7 @@ import { PathUnit, buildPathUnits } from '../content/path';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { CEFR_LEVELS, Lesson } from '../types/content';
 import { useAnimatedNumber } from '../utils/useAnimatedNumber';
 
@@ -57,7 +57,10 @@ export function HomeScreen() {
         <Text style={styles.xp}>⭐ {animatedXp} XP</Text>
       </View>
 
-      <Pressable style={styles.streakCard} onPress={() => navigation.navigate('Streak')}>
+      <Pressable
+        style={({ pressed }) => [styles.streakCard, pressedStyle(pressed)]}
+        onPress={() => navigation.navigate('Streak')}
+      >
         <StreakCalendar activeDates={progress.activeDates} />
       </Pressable>
 
@@ -156,12 +159,14 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 16,
       padding: 16,
       marginBottom: 16,
+      ...cardShadow(colors),
     },
     levelCard: {
       backgroundColor: colors.surface,
       borderRadius: 16,
       padding: 16,
       marginBottom: 28,
+      ...cardShadow(colors),
     },
     levelCardTitle: { fontSize: 15, fontWeight: '700', color: colors.text, marginBottom: 10 },
     levelTrack: {
@@ -187,6 +192,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 16,
       padding: 16,
       marginHorizontal: -16,
+      ...cardShadow(colors),
     },
     unitTitle: { fontSize: 22, fontWeight: '800', color: colors.text },
     unitDescription: { fontSize: 14, color: colors.textSecondary, marginBottom: 12 },

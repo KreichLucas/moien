@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, useTheme } from '../theme/theme';
 
 type NodeStatus = 'locked' | 'unlocked' | 'completed';
 
@@ -23,7 +23,11 @@ export function LessonNode({
   return (
     <View style={styles.wrapper}>
       <Pressable
-        style={[styles.circle, { backgroundColor }]}
+        style={({ pressed }) => [
+          styles.circle,
+          { backgroundColor },
+          pressed && status !== 'locked' && styles.circlePressed,
+        ]}
         disabled={status === 'locked'}
         onPress={onPress}
       >
@@ -47,6 +51,11 @@ function makeStyles(colors: ThemeColors) {
       justifyContent: 'center',
       borderBottomWidth: 5,
       borderBottomColor: 'rgba(0,0,0,0.15)',
+      ...cardShadow(colors),
+    },
+    circlePressed: {
+      borderBottomWidth: 0,
+      transform: [{ translateY: 4 }],
     },
     icon: { fontSize: 28, color: '#fff' },
     title: { marginTop: 6, fontSize: 13, fontWeight: '600', color: colors.text },

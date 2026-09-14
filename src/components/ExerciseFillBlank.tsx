@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GLOSSARY_LU_TO_PT, GLOSSARY_PT_TO_LU } from '../content/glossary';
 import { FillBlankExercise } from '../types/content';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { LanguageTag } from './LanguageTag';
 import { TappableSentence } from './TappableSentence';
 import { shuffle } from '../utils/shuffle';
@@ -121,14 +121,14 @@ export function ExerciseFillBlank({
       <View style={styles.footer}>
         {!checked ? (
           <Pressable
-            style={[styles.button, !selected && styles.buttonDisabled]}
+            style={({ pressed }) => [styles.button, !selected && styles.buttonDisabled, !!selected && pressedStyle(pressed)]}
             disabled={!selected}
             onPress={handleCheck}
           >
             <Text style={styles.buttonText}>VERIFICAR</Text>
           </Pressable>
         ) : (
-          <Pressable style={styles.button} onPress={handleContinue}>
+          <Pressable style={({ pressed }) => [styles.button, pressedStyle(pressed)]} onPress={handleContinue}>
             <Text style={styles.buttonText}>CONTINUAR</Text>
           </Pressable>
         )}
@@ -192,6 +192,7 @@ function makeStyles(colors: ThemeColors) {
       borderRadius: 14,
       paddingVertical: 16,
       alignItems: 'center',
+      ...cardShadow(colors),
     },
     buttonDisabled: { backgroundColor: colors.locked },
     buttonText: { color: colors.buttonTextOnPrimary, fontWeight: '700', fontSize: 16, letterSpacing: 0.5 },
