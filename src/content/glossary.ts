@@ -161,6 +161,16 @@ export function normalizeWord(word: string): string {
     .trim();
 }
 
+/**
+ * Strips a leading Luxembourgish article ("de", "den", "d'", "en", "eng")
+ * from a vocabulary prompt like "de Papp" or "d'Mamm", so a card that
+ * teaches a noun together with its article still counts as a single word
+ * for glossary purposes and the bare noun stays tappable inside sentences.
+ */
+function stripLeadingArticle(text: string): string {
+  return text.trim().replace(/^(d['’]|den|de|eng|en|e)\s+/i, '');
+}
+
 interface Glossaries {
   luToPt: Record<string, string>;
   ptToLu: Record<string, string>;
@@ -185,28 +195,39 @@ export function buildGlossaries(units: Unit[]): Glossaries {
     if (key && !ptToLu[key]) ptToLu[key] = meaning;
   };
 
+  // A vocabulary card teaches a noun together with its article (e.g. "de Papp",
+  // "d'Mamm"), but the tap-to-translate glossary is keyed by the bare word as
+  // it appears inside sentences ("Papp"). Stripping the article here lets
+  // both the card itself and any later sentence mentioning the same noun
+  // resolve to the same glossary entry.
+  const isSingleLuWord = (text: string) => !stripLeadingArticle(text).includes(' ');
+  const luKey = (text: string) => stripLeadingArticle(text);
+
   units.forEach((unit) => {
     unit.lessons.forEach((lesson) => {
       lesson.exercises.forEach((exercise) => {
         if (exercise.type === 'translate') {
-          const single = !exercise.prompt.trim().includes(' ');
-          const answerSingle = !exercise.acceptedAnswers[0].trim().includes(' ');
-          if (exercise.promptLang === 'lu' && single) addLu(exercise.prompt, exercise.acceptedAnswers[0]);
-          if (exercise.promptLang === 'pt' && single && answerSingle) {
+          const ptPromptSingle = !exercise.prompt.trim().includes(' ');
+          if (exercise.promptLang === 'lu' && isSingleLuWord(exercise.prompt)) {
+            addLu(luKey(exercise.prompt), exercise.acceptedAnswers[0]);
+          }
+          if (exercise.promptLang === 'pt' && ptPromptSingle && isSingleLuWord(exercise.acceptedAnswers[0])) {
             addPt(exercise.prompt, exercise.acceptedAnswers[0]);
           }
         }
         if (exercise.type === 'multipleChoice') {
-          const single = !exercise.prompt.trim().includes(' ');
+          const ptPromptSingle = !exercise.prompt.trim().includes(' ');
           const answer = exercise.options[exercise.correctIndex];
-          if (exercise.promptLang === 'lu' && single) addLu(exercise.prompt, answer);
-          if (exercise.promptLang === 'pt' && single && !answer.trim().includes(' ')) {
+          if (exercise.promptLang === 'lu' && isSingleLuWord(exercise.prompt)) {
+            addLu(luKey(exercise.prompt), answer);
+          }
+          if (exercise.promptLang === 'pt' && ptPromptSingle && isSingleLuWord(answer)) {
             addPt(exercise.prompt, answer);
           }
         }
         if (exercise.type === 'match') {
           exercise.pairs.forEach((pair) => {
-            if (!pair.lu.trim().includes(' ')) addLu(pair.lu, pair.pt);
+            if (isSingleLuWord(pair.lu)) addLu(luKey(pair.lu), pair.pt);
             if (!pair.pt.trim().includes(' ')) addPt(pair.pt, pair.lu);
           });
         }
