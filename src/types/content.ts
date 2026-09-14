@@ -9,6 +9,8 @@ export interface MultipleChoiceExercise {
   correctIndex: number;
   hint?: string;
   wordGlosses?: Record<string, string>;
+  /** Manual override for the learning item(s) this exercise tests. Auto-derived when absent. */
+  itemIds?: string[];
 }
 
 export interface TranslateExercise {
@@ -20,12 +22,14 @@ export interface TranslateExercise {
   hint?: string;
   /** Per-word gloss overrides, for when a word's usual meaning doesn't fit this sentence's context */
   wordGlosses?: Record<string, string>;
+  /** Manual override for the learning item(s) this exercise tests. Auto-derived when absent. */
+  itemIds?: string[];
 }
 
 export interface MatchExercise {
   type: 'match';
   id: string;
-  pairs: { pt: string; lu: string; hint?: string }[];
+  pairs: { pt: string; lu: string; hint?: string; itemId?: string }[];
 }
 
 export interface FillBlankExercise {
@@ -39,9 +43,28 @@ export interface FillBlankExercise {
   correctAnswer: string;
   hint?: string;
   wordGlosses?: Record<string, string>;
+  /** Manual override for the learning item(s) this exercise tests. Auto-derived when absent. */
+  itemIds?: string[];
 }
 
-export type Exercise = MultipleChoiceExercise | TranslateExercise | MatchExercise | FillBlankExercise;
+export interface OrderWordsExercise {
+  type: 'orderWords';
+  id: string;
+  translation: string;
+  /** Word chips as shown to the learner (shuffled at render time, not here). */
+  words: string[];
+  correctOrder: string[];
+  hint?: string;
+  /** Manual override for the learning item(s) this exercise tests. Auto-derived when absent. */
+  itemIds?: string[];
+}
+
+export type Exercise =
+  | MultipleChoiceExercise
+  | TranslateExercise
+  | MatchExercise
+  | FillBlankExercise
+  | OrderWordsExercise;
 
 export interface Lesson {
   id: string;

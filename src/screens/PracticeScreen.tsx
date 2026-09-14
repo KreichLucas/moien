@@ -5,6 +5,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LessonStartModal } from '../components/LessonStartModal';
 import { buildPathUnits } from '../content/path';
 import { units } from '../content/units';
+import { EXERCISE_INDEX, ITEM_REGISTRY } from '../learning/registry';
+import { buildDueReviewLesson, DYNAMIC_REVIEW_LESSON_ID, setCachedReviewLesson } from '../learning/reviewSession';
+import { dueItems } from '../learning/srs';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
 import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
@@ -19,6 +22,10 @@ export function PracticeScreen() {
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
+  const now = new Date().toISOString();
+  const due = useMemo(() => dueItems(progress.itemMastery, now), [progress.itemMastery]);
+  const dueCount = due.length;
+
   const pathUnits = useMemo(() => buildPathUnits(units), []);
   const practiceableUnits = pathUnits
     .map((unit) => ({
@@ -26,6 +33,13 @@ export function PracticeScreen() {
       lessons: unit.lessons.filter((l) => progress.completedLessonIds.includes(l.id)),
     }))
     .filter((unit) => unit.lessons.length > 0);
+
+  const startDueReview = () => {
+    const lesson = buildDueReviewLesson(progress.itemMastery, ITEM_REGISTRY, EXERCISE_INDEX, now);
+    if (!lesson) return;
+    setCachedReviewLesson(lesson);
+    navigation.navigate('Lesson', { lessonId: DYNAMIC_REVIEW_LESSON_ID });
+  };
 
   const handleStart = () => {
     if (!selectedLesson) return;
@@ -36,8 +50,30 @@ export function PracticeScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Praticar</Text>
-      <Text style={styles.subtitle}>Refaça qualquer lição já concluída, na ordem que quiser.</Text>
+      <Text style={styles.title}>Revisão</Text>
+      <Text style={styles.subtitle}>Pratique o que está enfraquecendo antes de aprender coisa nova.</Text>
+
+      <View style={styles.dueCard}>
+        <Text style={styles.dueIcon}>{dueCount > 0 ? '🔥' : '✅'}</Text>
+        <View style={styles.dueTextWrap}>
+          <Text style={styles.dueTitle}>
+            {dueCount > 0 ? `${dueCount} ${dueCount === 1 ? 'item pronto' : 'itens prontos'} para revisar` : 'Tudo em dia!'}
+          </Text>
+          <Text style={styles.dueSubtitle}>
+            {dueCount > 0
+              ? 'Uma sessão rápida focada no que você está esquecendo.'
+              : 'Nenhuma palavra está atrasada para revisão agora.'}
+          </Text>
+        </View>
+      </View>
+
+      {dueCount > 0 && (
+        <Pressable style={({ pressed }) => [styles.primaryButton, pressedStyle(pressed)]} onPress={startDueReview}>
+          <Text style={styles.primaryButtonText}>PRATICAR AGORA</Text>
+        </Pressable>
+      )}
+
+      <Text style={styles.sectionLabel}>Rever uma lição específica</Text>
 
       {practiceableUnits.length === 0 ? (
         <View style={styles.emptyState}>
@@ -85,8 +121,39 @@ function makeStyles(colors: ThemeColors) {
     container: { flex: 1, backgroundColor: colors.background },
     content: { padding: 20, paddingBottom: 60 },
     title: { fontSize: 24, fontWeight: '800', color: colors.text },
-    subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, marginBottom: 24 },
-    emptyState: { alignItems: 'center', marginTop: 60, paddingHorizontal: 24 },
+    subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, marginBottom: 20 },
+    dueCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+      backgroundColor: colors.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      ...cardShadow(colors),
+    },
+    dueIcon: { fontSize: 28 },
+    dueTextWrap: { flex: 1 },
+    dueTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
+    dueSubtitle: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+    primaryButton: {
+      backgroundColor: colors.primary,
+      borderRadius: 14,
+      paddingVertical: 16,
+      alignItems: 'center',
+      marginBottom: 28,
+      ...cardShadow(colors),
+    },
+    primaryButtonText: { color: colors.buttonTextOnPrimary, fontWeight: '700', fontSize: 16, letterSpacing: 0.5 },
+    sectionLabel: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: colors.textSecondary,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      marginBottom: 14,
+    },
+    emptyState: { alignItems: 'center', marginTop: 40, paddingHorizontal: 24 },
     emptyIcon: { fontSize: 48, marginBottom: 12 },
     emptyText: { fontSize: 14, color: colors.textSecondary, textAlign: 'center', lineHeight: 20 },
     unitBlock: { marginBottom: 24 },

@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { getAchievementsStatus } from '../content/achievements';
 import { getLevelProgress } from '../content/levels';
 import { units } from '../content/units';
+import { computeCourseMetrics } from '../learning/metrics';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
 import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
@@ -20,6 +21,10 @@ export function ProfileScreen() {
   const levelProgress = getLevelProgress(units, progress.completedLessonIds);
   const achievements = useMemo(() => getAchievementsStatus(progress, units), [progress]);
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const metrics = useMemo(
+    () => computeCourseMetrics(units, progress.completedLessonIds, progress.itemMastery, new Date().toISOString()),
+    [progress.completedLessonIds, progress.itemMastery]
+  );
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -56,6 +61,23 @@ export function ProfileScreen() {
         <Text style={styles.statLabel}>
           {levelProgress.isMaxLevel ? 'Nível máximo alcançado' : 'Nível atual em progresso'}
         </Text>
+      </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Domínio do idioma</Text>
+      </View>
+      <Text style={styles.sectionHint}>
+        Diferente do progresso do curso — mostra o que você realmente sabe e está mantendo.
+      </Text>
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{metrics.vocabularyMasteryPct}%</Text>
+          <Text style={styles.statLabel}>Vocabulário dominado</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statValue}>{metrics.retentionHealthPct}%</Text>
+          <Text style={styles.statLabel}>Saúde de retenção</Text>
+        </View>
       </View>
 
       <View style={styles.sectionHeader}>
@@ -115,6 +137,7 @@ function makeStyles(colors: ThemeColors) {
       marginBottom: 12,
     },
     sectionTitle: { fontSize: 18, fontWeight: '800', color: colors.text },
+    sectionHint: { width: '100%', fontSize: 12, color: colors.textSecondary, marginTop: -8, marginBottom: 12 },
     sectionCount: { fontSize: 13, fontWeight: '700', color: colors.textSecondary },
     badgeGrid: {
       width: '100%',

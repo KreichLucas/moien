@@ -1,5 +1,6 @@
 import { units } from './units';
 import { Unit } from '../types/content';
+import { isSingleLuWord, normalizeWord, stripLeadingArticle } from './wordNormalization';
 
 /**
  * Common Luxembourgish function words (pronouns, articles, basic verbs,
@@ -153,23 +154,7 @@ const PT_FUNCTION_WORDS: Record<string, string> = {
   tudo: 'alles',
 };
 
-export function normalizeWord(word: string): string {
-  return word
-    .toLowerCase()
-    .replace(/^d['’]/, '')
-    .replace(/[.,!?;:'"’()]/g, '')
-    .trim();
-}
-
-/**
- * Strips a leading Luxembourgish article ("de", "den", "d'", "en", "eng")
- * from a vocabulary prompt like "de Papp" or "d'Mamm", so a card that
- * teaches a noun together with its article still counts as a single word
- * for glossary purposes and the bare noun stays tappable inside sentences.
- */
-function stripLeadingArticle(text: string): string {
-  return text.trim().replace(/^(d['’]|den|de|eng|en|e)\s+/i, '');
-}
+export { normalizeWord } from './wordNormalization';
 
 interface Glossaries {
   luToPt: Record<string, string>;
@@ -200,8 +185,7 @@ export function buildGlossaries(units: Unit[]): Glossaries {
   // it appears inside sentences ("Papp"). Stripping the article here lets
   // both the card itself and any later sentence mentioning the same noun
   // resolve to the same glossary entry.
-  const isSingleLuWord = (text: string) => !stripLeadingArticle(text).includes(' ');
-  const luKey = (text: string) => stripLeadingArticle(text);
+  const luKey = stripLeadingArticle;
 
   units.forEach((unit) => {
     unit.lessons.forEach((lesson) => {

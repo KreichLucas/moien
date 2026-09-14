@@ -1,6 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { GLOSSARY_LU_TO_PT, GLOSSARY_PT_TO_LU } from '../content/glossary';
+import { classifyTranslateError } from '../learning/errorClassification';
+import { itemIdsForExercise } from '../learning/itemExtraction';
+import { ITEM_REGISTRY } from '../learning/registry';
+import { ErrorType, ExerciseOutcome } from '../learning/types';
 import { TranslateExercise } from '../types/content';
 import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { LanguageTag } from './LanguageTag';
@@ -10,12 +14,23 @@ function normalize(text: string): string {
   return text.trim().toLowerCase();
 }
 
+function severityOf(errorType: ErrorType): number {
+  if (errorType === 'wrong-article') return 0;
+  if (errorType === 'close-miss') return 1;
+  return 2;
+}
+
+const QUASE_MESSAGES: Record<Exclude<ErrorType, 'other'>, string> = {
+  'wrong-article': 'Quase! Só o artigo está errado.',
+  'close-miss': 'Quase! Confira a acentuação/ortografia.',
+};
+
 export function ExerciseTranslate({
   exercise,
   onComplete,
 }: {
   exercise: TranslateExercise;
-  onComplete: (hadMistake: boolean) => void;
+  onComplete: (outcome: ExerciseOutcome) => void;
 }) {
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -25,6 +40,11 @@ export function ExerciseTranslate({
   const [wordHint, setWordHint] = useState<{ word: string; gloss: string } | null>(null);
 
   const isCorrect = exercise.acceptedAnswers.some((a) => normalize(a) === normalize(answer));
+  const errorType: ErrorType | undefined = isCorrect
+    ? undefined
+    : exercise.acceptedAnswers
+        .map((a) => classifyTranslateError(answer, a))
+        .sort((a, b) => severityOf(a) - severityOf(b))[0];
   const baseGlossary = exercise.promptLang === 'lu' ? GLOSSARY_LU_TO_PT : GLOSSARY_PT_TO_LU;
   const wordGlossary = useMemo(
     () => (exercise.wordGlosses ? { ...baseGlossary, ...exercise.wordGlosses } : baseGlossary),
@@ -37,7 +57,16 @@ export function ExerciseTranslate({
   };
 
   const handleContinue = () => {
-    onComplete(!isCorrect);
+    const itemIds = itemIdsForExercise(exercise, ITEM_REGISTRY);
+    onComplete({
+      itemResults: itemIds.map((itemId) => ({
+        itemId,
+        correct: isCorrect,
+        errorType: isCorrect ? undefined : errorType,
+        exerciseId: exercise.id,
+        exerciseType: exercise.type,
+      })),
+    });
   };
 
   return (
@@ -75,6 +104,9 @@ export function ExerciseTranslate({
 
       {checked && !isCorrect && (
         <Pressable onPress={() => exercise.hint && setShowHint((s) => !s)}>
+          {errorType && errorType !== 'other' && (
+            <Text style={styles.quaseText}>❌ {QUASE_MESSAGES[errorType]}</Text>
+          )}
           <Text style={styles.correction}>
             Resposta correta: {exercise.acceptedAnswers[0]}
             {exercise.hint ? '  💡' : ''}
@@ -135,6 +167,7 @@ function makeStyles(colors: ThemeColors) {
     inputCorrect: { borderColor: colors.correctBorder, backgroundColor: colors.correctBg },
     inputWrong: { borderColor: colors.wrongBorder, backgroundColor: colors.wrongBg },
     correction: { marginTop: 10, color: colors.danger, fontWeight: '600' },
+    quaseText: { marginTop: 10, color: colors.accent, fontWeight: '700' },
     hintBox: {
       flexDirection: 'row',
       alignItems: 'center',

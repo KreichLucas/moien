@@ -1,4 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AttemptResult, ItemMasteryState } from '../learning/types';
+
+/** How many recent attempts to keep, purely to feed the engine's accuracy-based interleave ratio. */
+export const RECENT_ATTEMPTS_CAP = 50;
 
 export interface ProgressState {
   xp: number;
@@ -8,6 +12,10 @@ export interface ProgressState {
   completedLessonIds: string[];
   activeDates: string[];
   perfectLessonIds: string[];
+  /** Per-item spaced-repetition/mastery state, keyed by LearningItem id. */
+  itemMastery: Record<string, ItemMasteryState>;
+  /** Most-recent-first, capped to RECENT_ATTEMPTS_CAP. */
+  recentAttempts: AttemptResult[];
 }
 
 export const initialProgressState: ProgressState = {
@@ -18,6 +26,8 @@ export const initialProgressState: ProgressState = {
   completedLessonIds: [],
   activeDates: [],
   perfectLessonIds: [],
+  itemMastery: {},
+  recentAttempts: [],
 };
 
 const STORAGE_KEY = 'moien:progress';

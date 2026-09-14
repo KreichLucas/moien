@@ -15,6 +15,10 @@ function isLevelComplete(units: Unit[], completedLessonIds: string[], level: CEF
   return lessons.every((l) => completedLessonIds.includes(l.id));
 }
 
+function countAtDomainLevel(progress: ProgressState, minLevel: number): number {
+  return Object.values(progress.itemMastery).filter((s) => s.domainLevel >= minLevel).length;
+}
+
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first_lesson',
@@ -99,6 +103,20 @@ export const ACHIEVEMENTS: Achievement[] = [
     description: 'Complete todas as lições do nível A1',
     icon: '🏆',
     isUnlocked: (p, units) => isLevelComplete(units, p.completedLessonIds, 'A1'),
+  },
+  {
+    id: 'vocab_50',
+    title: '50 palavras dominadas',
+    description: 'Alcance domínio real (uso com ajuda ou mais) em 50 itens',
+    icon: '🧠',
+    isUnlocked: (p) => countAtDomainLevel(p, 4) >= 50,
+  },
+  {
+    id: 'vocab_mastery_20',
+    title: 'Domínio total',
+    description: 'Alcance o nível máximo de domínio em 20 itens',
+    icon: '👑',
+    isUnlocked: (p) => countAtDomainLevel(p, 6) >= 20,
   },
 ];
 

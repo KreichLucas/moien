@@ -1,5 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ITEM_REGISTRY } from '../learning/registry';
+import { ExerciseOutcome } from '../learning/types';
 import { MatchExercise } from '../types/content';
 import { ThemeColors, useTheme } from '../theme/theme';
 import { shuffle } from '../utils/shuffle';
@@ -9,7 +11,7 @@ export function ExerciseMatch({
   onComplete,
 }: {
   exercise: MatchExercise;
-  onComplete: (hadMistake: boolean) => void;
+  onComplete: (outcome: ExerciseOutcome) => void;
 }) {
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -26,13 +28,30 @@ export function ExerciseMatch({
   const [selectedLu, setSelectedLu] = useState<string | null>(null);
   const [wrongPair, setWrongPair] = useState<{ pt: string; lu: string } | null>(null);
   const [mistakeHint, setMistakeHint] = useState<string | null>(null);
-  const hadMistake = useRef(false);
+  const wrongPts = useRef<Set<string>>(new Set());
 
   const isDone = matched.size === exercise.pairs.length * 2;
 
   React.useEffect(() => {
     if (isDone) {
-      const timeout = setTimeout(() => onComplete(hadMistake.current), 500);
+      const timeout = setTimeout(() => {
+        onComplete({
+          itemResults: exercise.pairs
+            .map((pair, i) => {
+              const itemId = ITEM_REGISTRY.exerciseToItemIds[`${exercise.id}#${i}`]?.[0];
+              if (!itemId) return null;
+              const correct = !wrongPts.current.has(pair.pt);
+              return {
+                itemId,
+                correct,
+                errorType: correct ? undefined : ('other' as const),
+                exerciseId: exercise.id,
+                exerciseType: exercise.type,
+              };
+            })
+            .filter((r): r is NonNullable<typeof r> => r !== null),
+        });
+      }, 500);
       return () => clearTimeout(timeout);
     }
   }, [isDone]);
@@ -45,7 +64,7 @@ export function ExerciseMatch({
       setSelectedLu(null);
       setMistakeHint(null);
     } else {
-      hadMistake.current = true;
+      wrongPts.current.add(pt);
       setWrongPair({ pt, lu });
       const hint = exercise.pairs.find((p) => p.pt === pt)?.hint;
       if (hint) setMistakeHint(hint);

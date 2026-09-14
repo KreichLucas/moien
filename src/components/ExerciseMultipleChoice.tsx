@@ -1,6 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { GLOSSARY_LU_TO_PT, GLOSSARY_PT_TO_LU } from '../content/glossary';
+import { itemIdsForExercise } from '../learning/itemExtraction';
+import { ITEM_REGISTRY } from '../learning/registry';
+import { ExerciseOutcome } from '../learning/types';
 import { MultipleChoiceExercise } from '../types/content';
 import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { LanguageTag } from './LanguageTag';
@@ -11,7 +14,7 @@ export function ExerciseMultipleChoice({
   onComplete,
 }: {
   exercise: MultipleChoiceExercise;
-  onComplete: (hadMistake: boolean) => void;
+  onComplete: (outcome: ExerciseOutcome) => void;
 }) {
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -34,7 +37,16 @@ export function ExerciseMultipleChoice({
   };
 
   const handleContinue = () => {
-    onComplete(!isCorrect);
+    const itemIds = itemIdsForExercise(exercise, ITEM_REGISTRY);
+    onComplete({
+      itemResults: itemIds.map((itemId) => ({
+        itemId,
+        correct: isCorrect,
+        errorType: isCorrect ? undefined : 'other',
+        exerciseId: exercise.id,
+        exerciseType: exercise.type,
+      })),
+    });
   };
 
   return (

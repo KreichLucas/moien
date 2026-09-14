@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useReducer } from 'react';
+import { hasExerciseVariety } from '../learning/itemExtraction';
+import { ITEM_REGISTRY } from '../learning/registry';
+import { recordAttempt } from '../learning/srs';
+import { AttemptResult } from '../learning/types';
 import {
   ProgressState,
+  RECENT_ATTEMPTS_CAP,
   clearProgress,
   initialProgressState,
   loadProgress,
@@ -18,16 +23,39 @@ function daysBetween(a: string, b: string): number {
 
 type Action =
   | { type: 'HYDRATE'; state: ProgressState }
-  | { type: 'COMPLETE_LESSON'; lessonId: string; xpEarned: number; wasPerfect: boolean }
+  | { type: 'RECORD_LESSON_RESULT'; lessonId: string; xpEarned: number; wasPerfect: boolean; attempts: AttemptResult[] }
   | { type: 'RESET' };
+
+function applyAttemptsToMastery(
+  itemMastery: ProgressState['itemMastery'],
+  attempts: AttemptResult[],
+  now: string
+): ProgressState['itemMastery'] {
+  let result = itemMastery;
+  attempts.forEach((attempt) => {
+    const updated = recordAttempt({
+      state: result[attempt.itemId],
+      itemId: attempt.itemId,
+      correct: attempt.correct,
+      errorType: attempt.errorType,
+      exerciseId: attempt.exerciseId,
+      exerciseType: attempt.exerciseType,
+      now,
+      hasExerciseVariety: hasExerciseVariety(ITEM_REGISTRY, attempt.itemId),
+    });
+    result = { ...result, [attempt.itemId]: updated };
+  });
+  return result;
+}
 
 function reducer(state: ProgressState, action: Action): ProgressState {
   switch (action.type) {
     case 'HYDRATE':
-      return action.state;
+      return { ...initialProgressState, ...action.state };
     case 'RESET':
       return initialProgressState;
-    case 'COMPLETE_LESSON': {
+    case 'RECORD_LESSON_RESULT': {
+      const now = new Date().toISOString();
       const today = todayISODate();
       let streak = state.streak;
       if (!state.lastActiveDate) {
@@ -48,6 +76,11 @@ function reducer(state: ProgressState, action: Action): ProgressState {
         action.wasPerfect && !state.perfectLessonIds.includes(action.lessonId)
           ? [...state.perfectLessonIds, action.lessonId]
           : state.perfectLessonIds;
+
+      const itemMastery = applyAttemptsToMastery(state.itemMastery, action.attempts, now);
+      // Most-recent-first: the session's attempts happened in order, so the last one goes to index 0.
+      const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
+
       return {
         ...state,
         xp: state.xp + action.xpEarned,
@@ -57,6 +90,8 @@ function reducer(state: ProgressState, action: Action): ProgressState {
         completedLessonIds,
         activeDates,
         perfectLessonIds,
+        itemMastery,
+        recentAttempts,
       };
     }
     default:
@@ -66,7 +101,7 @@ function reducer(state: ProgressState, action: Action): ProgressState {
 
 interface ProgressContextValue {
   progress: ProgressState;
-  completeLesson: (lessonId: string, xpEarned: number, wasPerfect: boolean) => void;
+  completeLesson: (lessonId: string, xpEarned: number, wasPerfect: boolean, attempts: AttemptResult[]) => void;
   resetProgress: () => void;
   isLoaded: boolean;
 }
@@ -88,8 +123,8 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     if (isLoaded) saveProgress(progress);
   }, [progress, isLoaded]);
 
-  const completeLesson = (lessonId: string, xpEarned: number, wasPerfect: boolean) => {
-    dispatch({ type: 'COMPLETE_LESSON', lessonId, xpEarned, wasPerfect });
+  const completeLesson = (lessonId: string, xpEarned: number, wasPerfect: boolean, attempts: AttemptResult[]) => {
+    dispatch({ type: 'RECORD_LESSON_RESULT', lessonId, xpEarned, wasPerfect, attempts });
   };
 
   const resetProgress = () => {
