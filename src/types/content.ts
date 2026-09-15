@@ -81,4 +81,14 @@ export interface Unit {
   description: string;
   level: CEFRLevel;
   lessons: Lesson[];
+  /**
+   * When 'objective', the home trail renders this unit as a single tappable
+   * icon (instead of one node per lesson) that opens ObjectiveScreen, where
+   * each of the unit's lessons is shown as a "barra" the learner completes
+   * in order. Absent for every unit that keeps the original trail-of-nodes
+   * behavior (all non-A1 units, and any A1 unit not yet migrated).
+   */
+  kind?: 'objective';
+  /** Emoji shown on the trail icon for an 'objective' unit. */
+  icon?: string;
 }

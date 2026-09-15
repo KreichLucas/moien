@@ -5,6 +5,7 @@ import React from 'react';
 import { Text, useColorScheme } from 'react-native';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LessonScreen } from '../screens/LessonScreen';
+import { ObjectiveScreen } from '../screens/ObjectiveScreen';
 import { PracticeScreen } from '../screens/PracticeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ResultScreen } from '../screens/ResultScreen';
@@ -84,6 +85,7 @@ export function RootNavigator() {
         <Stack.Screen name="Result" component={ResultScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
         <Stack.Screen name="Streak" component={StreakScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="Objective" component={ObjectiveScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

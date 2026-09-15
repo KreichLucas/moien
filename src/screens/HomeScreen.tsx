@@ -6,7 +6,7 @@ import { LessonNode } from '../components/LessonNode';
 import { LessonStartModal } from '../components/LessonStartModal';
 import { StreakCalendar } from '../components/StreakCalendar';
 import { LEVEL_LABELS, getLevelProgress } from '../content/levels';
-import { PathUnit, buildPathUnits } from '../content/path';
+import { PathUnit, buildPathUnits, getLessonStatus } from '../content/path';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
@@ -90,6 +90,26 @@ export function HomeScreen() {
             .filter((u) => u.level === level)
             .map((unit) => {
               const unitCompleted = unit.lessons.every((l) => progress.completedLessonIds.includes(l.id));
+
+              if (unit.kind === 'objective') {
+                const completedCount = unit.lessons.filter((l) => progress.completedLessonIds.includes(l.id)).length;
+                const firstLessonIndex = allLessons.findIndex((l) => l.id === unit.lessons[0].id);
+                const firstStatus = getLessonStatus(allLessons, firstLessonIndex, progress.completedLessonIds);
+                const objectiveStatus = unitCompleted ? 'completed' : firstStatus === 'locked' ? 'locked' : 'unlocked';
+                return (
+                  <View key={unit.id} style={styles.unit}>
+                    <View style={styles.trail}>
+                      <LessonNode
+                        title={`${unit.title} · ${completedCount}/${unit.lessons.length}`}
+                        status={objectiveStatus}
+                        icon={unit.icon}
+                        onPress={() => navigation.navigate('Objective', { unitId: unit.id })}
+                      />
+                    </View>
+                  </View>
+                );
+              }
+
               return (
                 <View key={unit.id} style={[styles.unit, unit.isReview && styles.reviewUnit]}>
                   <Text style={styles.unitTitle}>
@@ -99,12 +119,8 @@ export function HomeScreen() {
                   <Text style={styles.unitDescription}>{unit.description}</Text>
                   <View style={styles.trail}>
                     {unit.lessons.map((lesson) => {
-                      const isCompleted = progress.completedLessonIds.includes(lesson.id);
                       const lessonIndex = allLessons.findIndex((l) => l.id === lesson.id);
-                      const isFirst = lessonIndex === 0;
-                      const previousCompleted =
-                        !isFirst && progress.completedLessonIds.includes(allLessons[lessonIndex - 1].id);
-                      const status = isCompleted ? 'completed' : isFirst || previousCompleted ? 'unlocked' : 'locked';
+                      const status = getLessonStatus(allLessons, lessonIndex, progress.completedLessonIds);
                       const offset = WAVE_PATTERN[lessonIndex % WAVE_PATTERN.length] * NODE_OFFSET;
 
                       return (

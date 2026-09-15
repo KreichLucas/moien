@@ -73,3 +73,24 @@ export function getPathLessons(units: Unit[]): Lesson[] {
 export function findLessonById(units: Unit[], lessonId: string): Lesson | undefined {
   return getPathLessons(units).find((l) => l.id === lessonId);
 }
+
+export type LessonStatus = 'locked' | 'unlocked' | 'completed';
+
+/**
+ * A lesson is unlocked once every lesson before it in the flat path order
+ * has been completed (the same linear-unlock rule HomeScreen has always
+ * used for the trail, extracted here so ObjectiveScreen's 5 "barras" and
+ * the trail's single objective-icon summary can both compute it the same
+ * way for a given lesson without duplicating the rule).
+ */
+export function getLessonStatus(
+  allLessons: Lesson[],
+  lessonIndex: number,
+  completedLessonIds: string[]
+): LessonStatus {
+  const lesson = allLessons[lessonIndex];
+  if (completedLessonIds.includes(lesson.id)) return 'completed';
+  const isFirst = lessonIndex === 0;
+  const previousCompleted = !isFirst && completedLessonIds.includes(allLessons[lessonIndex - 1].id);
+  return isFirst || previousCompleted ? 'unlocked' : 'locked';
+}
