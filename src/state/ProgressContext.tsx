@@ -4,6 +4,7 @@ import { ITEM_REGISTRY } from '../learning/registry';
 import { recordAttempt } from '../learning/srs';
 import { AttemptResult } from '../learning/types';
 import {
+  PendingLessonState,
   ProgressState,
   RECENT_ATTEMPTS_CAP,
   clearProgress,
@@ -24,6 +25,8 @@ function daysBetween(a: string, b: string): number {
 type Action =
   | { type: 'HYDRATE'; state: ProgressState }
   | { type: 'RECORD_LESSON_RESULT'; lessonId: string; xpEarned: number; wasPerfect: boolean; attempts: AttemptResult[] }
+  | { type: 'RECORD_PRACTICE_ATTEMPTS'; attempts: AttemptResult[] }
+  | { type: 'SET_PENDING_LESSON'; pendingLesson: PendingLessonState | null }
   | { type: 'RESET' };
 
 function applyAttemptsToMastery(
@@ -92,8 +95,25 @@ function reducer(state: ProgressState, action: Action): ProgressState {
         perfectLessonIds,
         itemMastery,
         recentAttempts,
+        // The lesson just finished for real — any paused/resumable snapshot is stale now.
+        pendingLesson: null,
       };
     }
+    case 'RECORD_PRACTICE_ATTEMPTS': {
+      // Diamond-recovery practice (and, in future, any other ad-hoc practice
+      // outside a full lesson) updates mastery/SRS exactly like a real
+      // attempt — that's what makes an item "reviewed" and lets it drop out
+      // of the due queue — but deliberately does NOT touch xp/streak/
+      // completedLessonIds/pendingLesson: it isn't completing a lesson, and
+      // granting XP for it would let a player farm XP by losing diamonds on
+      // purpose.
+      const now = new Date().toISOString();
+      const itemMastery = applyAttemptsToMastery(state.itemMastery, action.attempts, now);
+      const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
+      return { ...state, itemMastery, recentAttempts };
+    }
+    case 'SET_PENDING_LESSON':
+      return { ...state, pendingLesson: action.pendingLesson };
     default:
       return state;
   }
@@ -102,6 +122,9 @@ function reducer(state: ProgressState, action: Action): ProgressState {
 interface ProgressContextValue {
   progress: ProgressState;
   completeLesson: (lessonId: string, xpEarned: number, wasPerfect: boolean, attempts: AttemptResult[]) => void;
+  recordPracticeAttempts: (attempts: AttemptResult[]) => void;
+  savePendingLesson: (pendingLesson: PendingLessonState) => void;
+  clearPendingLesson: () => void;
   resetProgress: () => void;
   isLoaded: boolean;
 }
@@ -127,13 +150,27 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RECORD_LESSON_RESULT', lessonId, xpEarned, wasPerfect, attempts });
   };
 
+  const recordPracticeAttempts = (attempts: AttemptResult[]) => {
+    dispatch({ type: 'RECORD_PRACTICE_ATTEMPTS', attempts });
+  };
+
+  const savePendingLesson = (pendingLesson: PendingLessonState) => {
+    dispatch({ type: 'SET_PENDING_LESSON', pendingLesson });
+  };
+
+  const clearPendingLesson = () => {
+    dispatch({ type: 'SET_PENDING_LESSON', pendingLesson: null });
+  };
+
   const resetProgress = () => {
     dispatch({ type: 'RESET' });
     clearProgress();
   };
 
   return (
-    <ProgressContext.Provider value={{ progress, completeLesson, resetProgress, isLoaded }}>
+    <ProgressContext.Provider
+      value={{ progress, completeLesson, recordPracticeAttempts, savePendingLesson, clearPendingLesson, resetProgress, isLoaded }}
+    >
       {children}
     </ProgressContext.Provider>
   );

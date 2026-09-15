@@ -5,6 +5,8 @@ export type RootStackParamList = {
   Streak: undefined;
   Settings: undefined;
   Objective: { unitId: string };
+  OutOfDiamonds: { lessonId: string };
+  DiamondRecovery: { lessonId: string };
 };
 
 export type MainTabParamList = {

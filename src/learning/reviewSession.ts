@@ -1,4 +1,4 @@
-import { Lesson } from '../types/content';
+import { Exercise, Lesson } from '../types/content';
 import { pickExerciseForItem } from './engine';
 import { ItemRegistry } from './itemExtraction';
 import { dueItems } from './srs';
@@ -39,4 +39,29 @@ export function buildDueReviewLesson(
     .filter((ex): ex is NonNullable<typeof ex> => !!ex);
   if (exercises.length === 0) return null;
   return { id: DYNAMIC_REVIEW_LESSON_ID, title: 'Revisão', exercises };
+}
+
+/**
+ * Picks the next exercise for diamond-recovery practice: cycles through the
+ * items actually missed in the paused lesson (not the global SRS due queue
+ * — a just-missed level-0 item usually isn't "due" yet, see srs.ts, so due
+ * items could be empty or unrelated to what the learner just got wrong).
+ * Reuses pickExerciseForItem so the exercise shown still gets easier/harder
+ * with the item's real domain level, exactly like every other review path.
+ */
+export function pickNextRecoveryExercise(
+  missedItemIds: string[],
+  cursor: number,
+  registry: ItemRegistry,
+  exerciseIndex: Record<string, Exercise>,
+  masteryMap: Record<string, ItemMasteryState>
+): { exercise: Exercise; itemId: string } | null {
+  if (missedItemIds.length === 0) return null;
+  for (let i = 0; i < missedItemIds.length; i++) {
+    const itemId = missedItemIds[(cursor + i) % missedItemIds.length];
+    const domainLevel = masteryMap[itemId]?.domainLevel ?? 0;
+    const exercise = pickExerciseForItem(itemId, domainLevel, registry, exerciseIndex);
+    if (exercise) return { exercise, itemId };
+  }
+  return null;
 }

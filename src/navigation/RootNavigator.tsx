@@ -3,9 +3,11 @@ import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { Text, useColorScheme } from 'react-native';
+import { DiamondRecoveryScreen } from '../screens/DiamondRecoveryScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LessonScreen } from '../screens/LessonScreen';
 import { ObjectiveScreen } from '../screens/ObjectiveScreen';
+import { OutOfDiamondsScreen } from '../screens/OutOfDiamondsScreen';
 import { PracticeScreen } from '../screens/PracticeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ResultScreen } from '../screens/ResultScreen';
@@ -86,6 +88,8 @@ export function RootNavigator() {
         <Stack.Screen name="Streak" component={StreakScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="Objective" component={ObjectiveScreen} />
+        <Stack.Screen name="OutOfDiamonds" component={OutOfDiamondsScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
+        <Stack.Screen name="DiamondRecovery" component={DiamondRecoveryScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );

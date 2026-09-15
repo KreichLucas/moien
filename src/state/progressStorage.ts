@@ -1,8 +1,27 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AttemptResult, ItemMasteryState } from '../learning/types';
+import { SessionCard } from '../learning/engine';
 
 /** How many recent attempts to keep, purely to feed the engine's accuracy-based interleave ratio. */
 export const RECENT_ATTEMPTS_CAP = 50;
+
+/**
+ * A lesson interrupted by running out of diamonds (or just backgrounded
+ * mid-session) — enough to resume the exact same queue position, life
+ * count, and mistake tally later, whether that's seconds or days later.
+ * Cleared once the lesson actually finishes (see completeLesson).
+ */
+export interface PendingLessonState {
+  lessonId: string;
+  queue: SessionCard[];
+  currentIndex: number;
+  mistakes: number;
+  lives: number;
+  /** Deduped, first-missed-first, item ids missed so far in this attempt — feeds diamond recovery. */
+  missedItemIds: string[];
+  /** Real (non-micro-review) attempts recorded so far, merged in when the lesson eventually completes. */
+  attempts: AttemptResult[];
+}
 
 export interface ProgressState {
   xp: number;
@@ -16,6 +35,8 @@ export interface ProgressState {
   itemMastery: Record<string, ItemMasteryState>;
   /** Most-recent-first, capped to RECENT_ATTEMPTS_CAP. */
   recentAttempts: AttemptResult[];
+  /** Set while a lesson is paused out of diamonds (or just backgrounded); null otherwise. */
+  pendingLesson: PendingLessonState | null;
 }
 
 export const initialProgressState: ProgressState = {
@@ -28,6 +49,7 @@ export const initialProgressState: ProgressState = {
   perfectLessonIds: [],
   itemMastery: {},
   recentAttempts: [],
+  pendingLesson: null,
 };
 
 const STORAGE_KEY = 'moien:progress';
