@@ -148,19 +148,32 @@ export function buildSession(input: BuildSessionInput): SessionCard[] {
     reviewPicked.push(...due.filter((s) => !already.has(s.itemId)).slice(0, shortfall));
   }
 
+  // The pool of "new" items is left unsliced here — a lesson can easily test
+  // more distinct items than it has exercises (a single match exercise alone
+  // tests 4), so capping the pool to newCount before walking exercises would
+  // truncate by item count instead of card count and orphan later exercises
+  // whose items didn't make an arbitrary cut. The loop below caps by CARD
+  // count instead, which is what newCount actually means.
   const lessonItemIds = lesson.exercises.flatMap((ex) => itemIdsForExercise(ex, registry));
-  const newIds = dedupe(lessonItemIds.filter((id) => !masteryMap[id])).slice(0, newCount);
-  const newPoolIds = newIds.length >= newCount ? newIds : dedupe(lessonItemIds).slice(0, newCount);
+  const uncoveredIds = dedupe(lessonItemIds.filter((id) => !masteryMap[id]));
+  const newPoolIds = uncoveredIds.length > 0 ? uncoveredIds : dedupe(lessonItemIds);
+  const newPoolSet = new Set(newPoolIds);
 
-  const usedExerciseIds = new Set<string>();
+  // Walk the lesson's own authored order rather than picking one exercise per
+  // item: a lesson may deliberately test the same item more than once (e.g. a
+  // multipleChoice teach exercise followed later by a match reinforcement)
+  // to build the exposure count a later select/construct/produce exercise
+  // requires (see curriculumValidator.ts). Deduping down to one exercise per
+  // item would silently drop that reinforcement and break the authored
+  // pedagogical sequence.
   const newCards: SessionCard[] = [];
-  newPoolIds.forEach((id) => {
-    const ex = lesson.exercises.find((e) => !usedExerciseIds.has(e.id) && itemIdsForExercise(e, registry).includes(id));
-    if (ex) {
-      usedExerciseIds.add(ex.id);
+  for (const ex of lesson.exercises) {
+    if (newCards.length >= newCount) break;
+    const ids = itemIdsForExercise(ex, registry);
+    if (ids.some((id) => newPoolSet.has(id))) {
       newCards.push({ exercise: ex, isReview: false });
     }
-  });
+  }
 
   const reviewCards: SessionCard[] = reviewPicked
     .map((s) => pickExerciseForItem(s.itemId, s.domainLevel, registry, exerciseIndex))
