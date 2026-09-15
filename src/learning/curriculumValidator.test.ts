@@ -46,15 +46,13 @@ describe('tierOf', () => {
   });
 });
 
-describe('validateProgression', () => {
+describe('validateProgression — word readiness (words never taught standalone stay ungated)', () => {
   function unit(lessons: Unit['lessons']): Unit {
     return { id: 'u', title: 't', description: '', level: 'A1', lessons };
   }
 
-  it('flags a word tested at produce tier with zero prior exposure', () => {
-    const units_: Unit[] = [
-      unit([{ id: 'l1', title: 'L1', exercises: [translate('pt', 'Obrigado', ['Merci'])] }]),
-    ];
+  it('a produce-tier single word with zero prior exposure is flagged', () => {
+    const units_: Unit[] = [unit([{ id: 'l1', title: 'L1', exercises: [translate('pt', 'Obrigado', ['Merci'])] }])];
     const violations = validateProgression(units_);
     assert.equal(violations.length, 1);
     assert.equal(violations[0].word, 'merci');
@@ -78,38 +76,123 @@ describe('validateProgression', () => {
     assert.deepEqual(validateProgression(units_), []);
   });
 
-  it('flags a phrase produced (either direction) before it had a teach-tier exposure', () => {
-    const units_: Unit[] = [
-      unit([{ id: 'l1', title: 'L1', exercises: [translate('lu', 'Et geet mir gutt', ['Estou bem'])] }]),
-    ];
-    const violations = validateProgression(units_);
-    assert.ok(violations.some((v) => v.word === 'geet'));
-    assert.ok(violations.some((v) => v.word === 'gutt'));
-  });
-
-  it('ignores grammar/function words entirely (never flagged, never required)', () => {
-    const units_: Unit[] = [unit([{ id: 'l1', title: 'L1', exercises: [translate('pt', 'Eu', ['Ech'])] }])];
-    // "ech" is a grammar word, so even a cold produce-tier exercise for it raises no violation.
-    assert.deepEqual(validateProgression(units_), []);
-  });
-
-  it('a fillBlank whose fixed sentence text contains a never-seen content word is flagged', () => {
+  it('a fixed idiom whose words are never taught standalone is NOT gated (stays a memorized chunk)', () => {
+    // "Bis Bald" is introduced directly as a phrase and immediately produced —
+    // fine, because "bis" and "bald" never get their own standalone teach
+    // exercise anywhere, so they never become tracked/required words.
     const units_: Unit[] = [
       unit([
         {
           id: 'l1',
           title: 'L1',
           exercises: [
-            { type: 'fillBlank', id: 'x', promptLang: 'lu', sentence: 'Ech si midd, ___', translation: '', options: ['Entschëllegt'], correctAnswer: 'Entschëllegt' },
+            mc('lu', 'Bis Bald', ['Até logo', 'Tchau', 'Olá', 'Obrigado']),
+            { type: 'match', id: 'm', pairs: [{ pt: 'Até logo', lu: 'Bis Bald' }] },
+            translate('lu', 'Bis Bald', ['Até logo']),
+          ],
+        },
+      ]),
+    ];
+    assert.deepEqual(validateProgression(units_), []);
+  });
+
+  it('a compositional sentence is flagged when its words were never taught standalone, even at teach tier', () => {
+    // The real bug the user found: "Et geet mir gutt" shown/tested with
+    // "geet"/"gutt" only ever having appeared inside OTHER, unrelated
+    // phrases — never taught as their own standalone word.
+    const units_: Unit[] = [
+      unit([
+        {
+          id: 'l1',
+          title: 'L1',
+          exercises: [
+            mc('lu', 'gutt', ['bem', 'mal', 'grande', 'triste']), // "gutt" now tracked
+            mc('lu', 'Et geet mir gutt', ['Estou bem', 'Tchau', 'Olá', 'Obrigado']), // introduces the phrase
           ],
         },
       ]),
     ];
     const violations = validateProgression(units_);
-    assert.ok(violations.some((v) => v.word === 'midd'));
+    // "geet", "mir", and "et" were never taught standalone, so once "gutt" IS
+    // tracked, the phrase-teach exercise itself must wait for it — but here
+    // "gutt" already has one prior exposure (its own teach), still short of
+    // the 2 (teach + practice) required.
+    assert.ok(violations.some((v) => v.word === 'gutt' && v.tier === 'teach'));
   });
 
-  it('orderWords needs 2 prior exposures, not just 1', () => {
+  it('once every word has 2 standalone exposures, combining them into a new phrase is allowed at any tier', () => {
+    const teachAndPractice = (word: string, options: string[]): Exercise[] => [
+      mc('lu', word, options),
+      { type: 'match', id: `m-${word}`, pairs: [{ pt: options[0], lu: word }] },
+    ];
+    const units_: Unit[] = [
+      unit([
+        {
+          id: 'l1',
+          title: 'L1',
+          exercises: [
+            ...teachAndPractice('geet', ['vai', 'vem', 'dorme', 'fala']),
+            ...teachAndPractice('gutt', ['bem', 'mal', 'grande', 'triste']),
+            ...teachAndPractice('et', ['isso', 'eu', 'você', 'nós']),
+            ...teachAndPractice('mir', ['para mim', 'nós', 'você', 'eles']),
+            // The phrase's own first appearance can be its select-tier
+            // exercise directly — no separate "reveal" step is required —
+            // but produce still needs the phrase itself to have come up
+            // TWICE already (see the next test), so a second appearance
+            // (here, a construct-tier orderWords) comes before produce.
+            {
+              type: 'fillBlank',
+              id: 'fb',
+              promptLang: 'lu',
+              sentence: 'Et geet mir ___',
+              translation: 'Estou bem',
+              options: ['gutt', 'x', 'y', 'z'],
+              correctAnswer: 'gutt',
+            },
+            {
+              type: 'orderWords',
+              id: 'ow',
+              translation: 'Estou bem',
+              words: ['Et', 'geet', 'mir', 'gutt'],
+              correctOrder: ['Et', 'geet', 'mir', 'gutt'],
+            },
+            translate('lu', 'Et geet mir gutt', ['Estou bem']),
+          ],
+        },
+      ]),
+    ];
+    assert.deepEqual(validateProgression(units_), []);
+  });
+
+  it('produce still requires the exact phrase to have appeared once already, even once words are ready', () => {
+    const teachAndPractice = (word: string, options: string[]): Exercise[] => [
+      mc('lu', word, options),
+      { type: 'match', id: `m-${word}`, pairs: [{ pt: options[0], lu: word }] },
+    ];
+    const units_: Unit[] = [
+      unit([
+        {
+          id: 'l1',
+          title: 'L1',
+          exercises: [
+            ...teachAndPractice('geet', ['vai', 'vem', 'dorme', 'fala']),
+            ...teachAndPractice('gutt', ['bem', 'mal', 'grande', 'triste']),
+            ...teachAndPractice('et', ['isso', 'eu', 'você', 'nós']),
+            ...teachAndPractice('mir', ['para mim', 'nós', 'você', 'eles']),
+            // Straight to produce, skipping any prior appearance of the phrase itself.
+            translate('lu', 'Et geet mir gutt', ['Estou bem']),
+          ],
+        },
+      ]),
+    ];
+    const violations = validateProgression(units_);
+    assert.equal(violations.length, 1);
+    assert.equal(violations[0].word, 'et geet mir gutt');
+    assert.equal(violations[0].tier, 'produce');
+    assert.equal(violations[0].requiredExposures, 1);
+  });
+
+  it('orderWords requires each tile word to be individually ready, not just the phrase', () => {
     const units_: Unit[] = [
       unit([
         {

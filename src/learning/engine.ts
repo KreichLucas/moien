@@ -180,7 +180,15 @@ export function buildSession(input: BuildSessionInput): SessionCard[] {
     .filter((ex): ex is Exercise => !!ex)
     .map((ex) => ({ exercise: ex, isReview: true }));
 
-  return spreadOutRepeats([...newCards, ...reviewCards], registry).slice(0, N);
+  // spreadOutRepeats only reorders the review portion — never the new-content
+  // portion. Reordering new cards relative to each other would silently
+  // undo curriculumValidator's guarantee: it verifies the AUTHORED order
+  // never asks for a word/phrase before it's ready, and a same-item-adjacency
+  // fix that reorders e.g. a word's 2nd teach exposure to land AFTER the
+  // exercise that depends on it would reintroduce exactly the bug this
+  // exists to prevent. Review items are already-mastered, so reordering
+  // among them carries no such risk.
+  return [...newCards, ...spreadOutRepeats(reviewCards, registry)].slice(0, N);
 }
 
 /**
