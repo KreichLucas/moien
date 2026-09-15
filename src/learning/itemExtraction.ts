@@ -106,6 +106,22 @@ export function hasExerciseVariety(registry: ItemRegistry, itemId: string): bool
   return (registry.items[itemId]?.sourceExerciseIds.length ?? 0) > 1;
 }
 
+/**
+ * True only if this item still resolves to real content in the CURRENT
+ * registry. Content gets renamed/restructured over time (e.g. an exercise
+ * id gets reused for different content, or a phrase item's source exercise
+ * is removed), and a learner's persisted itemMastery can end up with
+ * "orphaned" entries pointing at ids that no longer mean anything. Every
+ * place that treats an item as "due for review" must filter through this
+ * first — an orphaned due item still counts toward isDue's true/false, but
+ * silently fails to produce an exercise, which previously shrank
+ * buildSession's review slot allocation without backfilling it with new
+ * content, cutting a lesson far shorter than its authored length.
+ */
+export function isResolvableItem(itemId: string, registry: ItemRegistry): boolean {
+  return !!registry.items[itemId];
+}
+
 /** Which learning item(s) a given exercise tests — one per match pair, else at most one. */
 export function itemIdsForExercise(exercise: Exercise, registry: ItemRegistry): string[] {
   if (exercise.type === 'match') {

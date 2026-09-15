@@ -89,6 +89,25 @@ describe('buildSession — backlog-aware new/review ratio', () => {
     const reviewCount = session.filter((c) => c.isReview).length;
     assert.equal(reviewCount, 1);
   });
+
+  it('orphaned due items (itemId no longer in the registry, e.g. after content was rewritten) never shrink the session', () => {
+    // Real bug found 2026-09-15: a learner's persisted itemMastery can
+    // reference an itemId that content no longer produces at all (the
+    // exercise id got reused for different content, or was removed). Those
+    // entries used to count toward reviewCount but then resolve to null via
+    // pickExerciseForItem and get silently dropped — shrinking the session
+    // well below the authored length with no backfill, so finishing the
+    // lesson (and reaching the Result screen) happened after just a couple
+    // of real questions.
+    const { lesson, registry, exerciseIndex } = makeLesson(10);
+    const masteryMap: Record<string, ItemMasteryState> = {};
+    for (let i = 0; i < 20; i++) {
+      const itemId = `phrase:removed-exercise-${i}`;
+      masteryMap[itemId] = dueState(itemId, 2, 5); // due, but "phrase:removed-exercise-N" is in nobody's registry
+    }
+    const session = buildSession({ lesson, exerciseIndex, registry, masteryMap, recentAttempts: [], now: NOW });
+    assert.equal(session.length, lesson.exercises.length, 'orphaned due items must not shrink the session below its authored length');
+  });
 });
 
 describe('buildSession — variety-aware exercise picking', () => {

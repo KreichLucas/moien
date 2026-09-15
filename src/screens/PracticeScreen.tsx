@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LessonStartModal } from '../components/LessonStartModal';
 import { buildPathUnits } from '../content/path';
 import { units } from '../content/units';
+import { isResolvableItem } from '../learning/itemExtraction';
 import { EXERCISE_INDEX, ITEM_REGISTRY } from '../learning/registry';
 import { buildDueReviewLesson, DYNAMIC_REVIEW_LESSON_ID, setCachedReviewLesson } from '../learning/reviewSession';
 import { dueItems } from '../learning/srs';
@@ -23,7 +24,13 @@ export function PracticeScreen() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   const now = new Date().toISOString();
-  const due = useMemo(() => dueItems(progress.itemMastery, now), [progress.itemMastery]);
+  // Excludes orphaned mastery entries (itemId no longer resolves to any
+  // current exercise, e.g. after a content rewrite) — otherwise the count
+  // shown here can overstate what "PRATICAR AGORA" actually delivers.
+  const due = useMemo(
+    () => dueItems(progress.itemMastery, now).filter((s) => isResolvableItem(s.itemId, ITEM_REGISTRY)),
+    [progress.itemMastery]
+  );
   const dueCount = due.length;
 
   const pathUnits = useMemo(() => buildPathUnits(units), []);

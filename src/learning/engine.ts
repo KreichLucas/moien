@@ -1,5 +1,5 @@
 import { Exercise, Lesson } from '../types/content';
-import { ItemRegistry, itemIdsForExercise } from './itemExtraction';
+import { ItemRegistry, isResolvableItem, itemIdsForExercise } from './itemExtraction';
 import { daysSince, isDue } from './srs';
 import { AttemptResult, ItemMasteryState } from './types';
 
@@ -122,7 +122,13 @@ export function buildSession(input: BuildSessionInput): SessionCard[] {
   const N = lesson.exercises.length;
   if (N === 0) return [];
 
-  const due = Object.values(masteryMap).filter((s) => isDue(s, now));
+  // Filter out orphaned mastery entries (an itemId no exercise resolves to
+  // anymore, e.g. after content got renamed/restructured) BEFORE computing
+  // reviewCount — otherwise stale due items eat into new-content slots via
+  // reviewCount, then silently produce no exercise (pickExerciseForItem
+  // returns null for them), leaving a session far shorter than N with no
+  // backfill. See itemExtraction.ts's isResolvableItem.
+  const due = Object.values(masteryMap).filter((s) => isDue(s, now) && isResolvableItem(s.itemId, registry));
   const reviewCount = Math.min(Math.max(0, N - MIN_NEW_COUNT), due.length);
   const newCount = N - reviewCount;
 

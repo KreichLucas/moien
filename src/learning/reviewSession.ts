@@ -1,6 +1,6 @@
 import { Exercise, Lesson } from '../types/content';
 import { pickExerciseForItem } from './engine';
-import { ItemRegistry } from './itemExtraction';
+import { ItemRegistry, isResolvableItem } from './itemExtraction';
 import { dueItems } from './srs';
 import { ItemMasteryState } from './types';
 
@@ -32,7 +32,12 @@ export function buildDueReviewLesson(
   exerciseIndex: Record<string, import('../types/content').Exercise>,
   now: string
 ): Lesson | null {
-  const due = dueItems(masteryMap, now).sort((a, b) => (a.nextReviewAt ?? '').localeCompare(b.nextReviewAt ?? ''));
+  // Drop orphaned entries (itemId no longer resolves to any current
+  // exercise, e.g. after a content rewrite) before capping — otherwise
+  // stale due items can crowd out real ones within the 12-exercise cap.
+  const due = dueItems(masteryMap, now)
+    .filter((s) => isResolvableItem(s.itemId, registry))
+    .sort((a, b) => (a.nextReviewAt ?? '').localeCompare(b.nextReviewAt ?? ''));
   const picked = due.slice(0, MAX_DYNAMIC_REVIEW_EXERCISES);
   const exercises = picked
     .map((state) => pickExerciseForItem(state.itemId, state.domainLevel, registry, exerciseIndex))
