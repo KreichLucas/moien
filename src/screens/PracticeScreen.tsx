@@ -5,10 +5,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { LessonStartModal } from '../components/LessonStartModal';
 import { buildPathUnits } from '../content/path';
 import { units } from '../content/units';
-import { isResolvableItem } from '../learning/itemExtraction';
 import { EXERCISE_INDEX, ITEM_REGISTRY } from '../learning/registry';
-import { buildDueReviewLesson, DYNAMIC_REVIEW_LESSON_ID, setCachedReviewLesson } from '../learning/reviewSession';
-import { dueItems } from '../learning/srs';
+import { buildDueReviewLesson, DYNAMIC_REVIEW_LESSON_ID, practiceReadyItemIds, setCachedReviewLesson } from '../learning/reviewSession';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
 import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
@@ -24,14 +22,13 @@ export function PracticeScreen() {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   const now = new Date().toISOString();
-  // Excludes orphaned mastery entries (itemId no longer resolves to any
-  // current exercise, e.g. after a content rewrite) — otherwise the count
-  // shown here can overstate what "PRATICAR AGORA" actually delivers.
-  const due = useMemo(
-    () => dueItems(progress.itemMastery, now).filter((s) => isResolvableItem(s.itemId, ITEM_REGISTRY)),
-    [progress.itemMastery]
+  // Outright mistakes (pendingReviewItemIds) plus whatever's due for spaced
+  // reinforcement — see practiceReadyItemIds for why a mistake needs its
+  // own explicit flag instead of relying on isDue alone.
+  const dueCount = useMemo(
+    () => practiceReadyItemIds(progress.itemMastery, progress.pendingReviewItemIds, ITEM_REGISTRY, now).length,
+    [progress.itemMastery, progress.pendingReviewItemIds]
   );
-  const dueCount = due.length;
 
   const pathUnits = useMemo(() => buildPathUnits(units), []);
   const practiceableUnits = pathUnits
@@ -42,7 +39,7 @@ export function PracticeScreen() {
     .filter((unit) => unit.lessons.length > 0);
 
   const startDueReview = () => {
-    const lesson = buildDueReviewLesson(progress.itemMastery, ITEM_REGISTRY, EXERCISE_INDEX, now);
+    const lesson = buildDueReviewLesson(progress.itemMastery, progress.pendingReviewItemIds, ITEM_REGISTRY, EXERCISE_INDEX, now);
     if (!lesson) return;
     setCachedReviewLesson(lesson);
     navigation.navigate('Lesson', { lessonId: DYNAMIC_REVIEW_LESSON_ID });

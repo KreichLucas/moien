@@ -37,6 +37,16 @@ export interface ProgressState {
   recentAttempts: AttemptResult[];
   /** Set while a lesson is paused out of diamonds (or just backgrounded); null otherwise. */
   pendingLesson: PendingLessonState | null;
+  /**
+   * Every item currently missed and not yet reviewed correctly — independent
+   * of the spaced-repetition schedule (isDue/nextReviewAt), which exists to
+   * pace FUTURE reinforcement of things already known and can leave a
+   * fresh mistake invisible in Praticar for a day or more, or forever for a
+   * level-0 item. Added to on any wrong attempt, removed on any correct one
+   * (wherever that correct answer happens — a normal lesson, Praticar, or
+   * diamond recovery), so this only shrinks through real review.
+   */
+  pendingReviewItemIds: string[];
 }
 
 export const initialProgressState: ProgressState = {
@@ -50,6 +60,7 @@ export const initialProgressState: ProgressState = {
   itemMastery: {},
   recentAttempts: [],
   pendingLesson: null,
+  pendingReviewItemIds: [],
 };
 
 const STORAGE_KEY = 'moien:progress';

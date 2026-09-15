@@ -26,6 +26,7 @@ type Action =
   | { type: 'HYDRATE'; state: ProgressState }
   | { type: 'RECORD_LESSON_RESULT'; lessonId: string; xpEarned: number; wasPerfect: boolean; attempts: AttemptResult[] }
   | { type: 'RECORD_PRACTICE_ATTEMPTS'; attempts: AttemptResult[] }
+  | { type: 'MARK_PENDING_REVIEW'; attempts: AttemptResult[] }
   | { type: 'SET_PENDING_LESSON'; pendingLesson: PendingLessonState | null }
   | { type: 'RESET' };
 
@@ -47,6 +48,29 @@ function applyAttemptsToMastery(
       hasExerciseVariety: hasExerciseVariety(ITEM_REGISTRY, attempt.itemId),
     });
     result = { ...result, [attempt.itemId]: updated };
+  });
+  return result;
+}
+
+/**
+ * A wrong attempt adds its item; a correct attempt removes it — applied in
+ * the order the attempts actually happened, so a word missed then later
+ * fixed within the SAME batch nets out to "not pending" correctly. This is
+ * the explicit, SRS-schedule-independent signal Praticar shows: isDue
+ * (srs.ts) exists to pace FUTURE reinforcement of things already known and
+ * can leave a fresh mistake invisible for a day or more (or forever for a
+ * level-0 item, since nextReviewAt stays null there) — a real regression
+ * the user hit ("errei no final da lição e não foi pra Praticar").
+ */
+function applyAttemptsToPendingReview(pendingReviewItemIds: string[], attempts: AttemptResult[]): string[] {
+  let result = pendingReviewItemIds;
+  attempts.forEach((attempt) => {
+    const has = result.includes(attempt.itemId);
+    if (attempt.correct) {
+      if (has) result = result.filter((id) => id !== attempt.itemId);
+    } else if (!has) {
+      result = [...result, attempt.itemId];
+    }
   });
   return result;
 }
@@ -81,6 +105,7 @@ function reducer(state: ProgressState, action: Action): ProgressState {
           : state.perfectLessonIds;
 
       const itemMastery = applyAttemptsToMastery(state.itemMastery, action.attempts, now);
+      const pendingReviewItemIds = applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts);
       // Most-recent-first: the session's attempts happened in order, so the last one goes to index 0.
       const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
 
@@ -95,6 +120,7 @@ function reducer(state: ProgressState, action: Action): ProgressState {
         perfectLessonIds,
         itemMastery,
         recentAttempts,
+        pendingReviewItemIds,
         // The lesson just finished for real — any paused/resumable snapshot is stale now.
         pendingLesson: null,
       };
@@ -109,9 +135,22 @@ function reducer(state: ProgressState, action: Action): ProgressState {
       // purpose.
       const now = new Date().toISOString();
       const itemMastery = applyAttemptsToMastery(state.itemMastery, action.attempts, now);
+      const pendingReviewItemIds = applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts);
       const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
-      return { ...state, itemMastery, recentAttempts };
+      return { ...state, itemMastery, recentAttempts, pendingReviewItemIds };
     }
+    case 'MARK_PENDING_REVIEW':
+      // Fired live, per-answer, from LessonScreen — independent of mastery/
+      // xp/streak, which stay batched until the lesson actually completes
+      // (see completeLesson). This is what makes a mistake show up in
+      // Praticar even if the lesson is later paused for diamonds or
+      // abandoned outright without ever finishing: otherwise those misses
+      // would only reach pendingReviewItemIds via RECORD_LESSON_RESULT,
+      // which never fires for a lesson that's never completed. Idempotent
+      // with the batch update in RECORD_LESSON_RESULT/RECORD_PRACTICE_
+      // ATTEMPTS — replaying the same already-applied attempts again nets
+      // out to the same result, so no double-counting risk.
+      return { ...state, pendingReviewItemIds: applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts) };
     case 'SET_PENDING_LESSON':
       return { ...state, pendingLesson: action.pendingLesson };
     default:
@@ -123,6 +162,7 @@ interface ProgressContextValue {
   progress: ProgressState;
   completeLesson: (lessonId: string, xpEarned: number, wasPerfect: boolean, attempts: AttemptResult[]) => void;
   recordPracticeAttempts: (attempts: AttemptResult[]) => void;
+  markPendingReview: (attempts: AttemptResult[]) => void;
   savePendingLesson: (pendingLesson: PendingLessonState) => void;
   clearPendingLesson: () => void;
   resetProgress: () => void;
@@ -154,6 +194,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RECORD_PRACTICE_ATTEMPTS', attempts });
   };
 
+  const markPendingReview = (attempts: AttemptResult[]) => {
+    dispatch({ type: 'MARK_PENDING_REVIEW', attempts });
+  };
+
   const savePendingLesson = (pendingLesson: PendingLessonState) => {
     dispatch({ type: 'SET_PENDING_LESSON', pendingLesson });
   };
@@ -169,7 +213,16 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ProgressContext.Provider
-      value={{ progress, completeLesson, recordPracticeAttempts, savePendingLesson, clearPendingLesson, resetProgress, isLoaded }}
+      value={{
+        progress,
+        completeLesson,
+        recordPracticeAttempts,
+        markPendingReview,
+        savePendingLesson,
+        clearPendingLesson,
+        resetProgress,
+        isLoaded,
+      }}
     >
       {children}
     </ProgressContext.Provider>

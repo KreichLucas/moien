@@ -22,25 +22,44 @@ export function getCachedReviewLesson(): Lesson | null {
 }
 
 /**
- * Builds a one-off "Revisão" lesson out of whatever the learner currently
- * has due for spaced review, most-overdue first. Used by the Revisão screen
- * (evolved PracticeScreen) instead of replaying a fixed lesson verbatim.
+ * Every item Praticar should offer right now: outright mistakes first (an
+ * explicit, SRS-schedule-independent flag — see pendingReviewItemIds on
+ * ProgressState — because a fresh miss can be invisible under isDue for a
+ * day or more, or forever for a level-0 item), then whatever's due for
+ * spaced reinforcement, oldest-scheduled first. Deduped, and orphaned
+ * entries (itemId no longer resolves to any current exercise, e.g. after a
+ * content rewrite) dropped so they can't crowd out real ones.
+ */
+export function practiceReadyItemIds(
+  masteryMap: Record<string, ItemMasteryState>,
+  pendingReviewItemIds: string[],
+  registry: ItemRegistry,
+  now: string
+): string[] {
+  const mistakes = pendingReviewItemIds.filter((id) => isResolvableItem(id, registry));
+  const mistakeSet = new Set(mistakes);
+  const due = dueItems(masteryMap, now)
+    .filter((s) => isResolvableItem(s.itemId, registry) && !mistakeSet.has(s.itemId))
+    .sort((a, b) => (a.nextReviewAt ?? '').localeCompare(b.nextReviewAt ?? ''))
+    .map((s) => s.itemId);
+  return [...mistakes, ...due];
+}
+
+/**
+ * Builds a one-off "Revisão" lesson out of practiceReadyItemIds. Used by the
+ * Revisão screen (evolved PracticeScreen) instead of replaying a fixed
+ * lesson verbatim.
  */
 export function buildDueReviewLesson(
   masteryMap: Record<string, ItemMasteryState>,
+  pendingReviewItemIds: string[],
   registry: ItemRegistry,
   exerciseIndex: Record<string, import('../types/content').Exercise>,
   now: string
 ): Lesson | null {
-  // Drop orphaned entries (itemId no longer resolves to any current
-  // exercise, e.g. after a content rewrite) before capping — otherwise
-  // stale due items can crowd out real ones within the 12-exercise cap.
-  const due = dueItems(masteryMap, now)
-    .filter((s) => isResolvableItem(s.itemId, registry))
-    .sort((a, b) => (a.nextReviewAt ?? '').localeCompare(b.nextReviewAt ?? ''));
-  const picked = due.slice(0, MAX_DYNAMIC_REVIEW_EXERCISES);
+  const picked = practiceReadyItemIds(masteryMap, pendingReviewItemIds, registry, now).slice(0, MAX_DYNAMIC_REVIEW_EXERCISES);
   const exercises = picked
-    .map((state) => pickExerciseForItem(state.itemId, state.domainLevel, registry, exerciseIndex))
+    .map((itemId) => pickExerciseForItem(itemId, masteryMap[itemId]?.domainLevel ?? 0, registry, exerciseIndex))
     .filter((ex): ex is NonNullable<typeof ex> => !!ex);
   if (exercises.length === 0) return null;
   return { id: DYNAMIC_REVIEW_LESSON_ID, title: 'Revisão', exercises };

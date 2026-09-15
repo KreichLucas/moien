@@ -30,7 +30,7 @@ export function LessonScreen({ route, navigation }: Props) {
   const { lessonId } = route.params;
   const lesson =
     lessonId === DYNAMIC_REVIEW_LESSON_ID ? getCachedReviewLesson()! : findLessonById(units, lessonId)!;
-  const { progress, completeLesson, savePendingLesson } = useProgress();
+  const { progress, completeLesson, savePendingLesson, markPendingReview } = useProgress();
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -90,6 +90,11 @@ export function LessonScreen({ route, navigation }: Props) {
     // re-test measures working memory, not learning — see the plan).
     if (!card.isMicroReview) {
       attemptsRef.current = [...attemptsRef.current, ...outcome.itemResults];
+      // Live, per-answer: marks/clears Praticar's pending-review flag
+      // immediately, independent of xp/mastery (which stay batched until
+      // completeLesson) — so a mistake shows up there even if this lesson
+      // gets paused for diamonds or abandoned without ever finishing.
+      markPendingReview(outcome.itemResults);
     }
 
     let nextQueue = queue;
