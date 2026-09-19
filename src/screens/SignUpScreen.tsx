@@ -161,7 +161,11 @@ export function SignUpScreen({ navigation }: Props) {
           disabled={isDisabled}
           onHoverIn={() => isHoverReady() && setPrimaryHovered(true)}
           onHoverOut={() => setPrimaryHovered(false)}
-          style={({ pressed }) => [!isDisabled && liftStyle(primaryHovered, pressed), isDisabled && styles.buttonDisabled]}
+          style={({ pressed }) => [
+            { marginTop: 4 },
+            !isDisabled && liftStyle(primaryHovered, pressed),
+            isDisabled && styles.buttonDisabled,
+          ]}
         >
           <LinearGradient
             colors={[authColors.accentCyan, authColors.accentBlue]}

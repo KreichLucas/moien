@@ -197,22 +197,24 @@ export function DashboardScreen() {
                   <Text style={styles.heroQuoteAttribution}>— Provérbio luxemburguês</Text>
                 </>
               )}
-              <Pressable
-                onPress={goToLearn}
-                onHoverIn={onHoverIn('heroButton')}
-                onHoverOut={onHoverOut('heroButton')}
-                style={({ pressed }) => [{ alignSelf: 'flex-start' }, liftStyle(hoveredId === 'heroButton', pressed)]}
-              >
-                <LinearGradient
-                  colors={[authColors.accentCyan, authColors.accentBlue]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.heroButton}
+              <View style={styles.heroButtonWrap}>
+                <Pressable
+                  onPress={goToLearn}
+                  onHoverIn={onHoverIn('heroButton')}
+                  onHoverOut={onHoverOut('heroButton')}
+                  style={({ pressed }) => [{ alignSelf: 'flex-start' }, liftStyle(hoveredId === 'heroButton', pressed)]}
                 >
-                  <Text style={styles.heroButtonText}>Continuar aprendendo</Text>
-                  <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
-                </LinearGradient>
-              </Pressable>
+                  <LinearGradient
+                    colors={[authColors.accentCyan, authColors.accentBlue]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.heroButton}
+                  >
+                    <Text style={styles.heroButtonText}>Continuar aprendendo</Text>
+                    <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+                  </LinearGradient>
+                </Pressable>
+              </View>
             </View>
             <View style={styles.heroCorner}>
               <Text style={styles.heroCornerText}>Lëtzebuerg</Text>

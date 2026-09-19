@@ -228,6 +228,14 @@ export function makeDashboardStyles() {
     heroSubtitle: { fontFamily: fontFamilies.displayRegular, fontSize: 16, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
     heroQuote: { fontFamily: fontFamilies.script, fontSize: 24, color: authColors.accentCyan, marginTop: 20 },
     heroQuoteAttribution: { fontFamily: fontFamilies.displayRegular, fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
+    // No marginTop here on purpose — a margin on this element (or on the
+    // Pressable wrapping it) would still count as part of that element's
+    // own box for layout, and box-shadow paints around the FULL box,
+    // margin included, not just the visible pill. That was the leftover
+    // "band" above the button: an empty-but-still-shadow-casting strip as
+    // tall as the margin. The spacing instead lives on `heroButtonWrap`,
+    // a plain View one level up with no shadow of its own to leak.
+    heroButtonWrap: { marginTop: 24, alignSelf: 'flex-start' },
     heroButton: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -236,7 +244,6 @@ export function makeDashboardStyles() {
       borderRadius: 16,
       paddingVertical: 15,
       paddingHorizontal: 24,
-      marginTop: 24,
       shadowColor: authColors.accentCyan,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.5,

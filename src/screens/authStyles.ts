@@ -268,7 +268,6 @@ export function makeAuthStyles() {
       gap: 10,
       borderRadius: 16,
       paddingVertical: 15,
-      marginTop: 4,
       shadowColor: authColors.accentCyan,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.4,
