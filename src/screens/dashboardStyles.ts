@@ -302,7 +302,14 @@ export function makeDashboardStyles() {
     sectionTitle: { fontFamily: fontFamilies.displayBold, fontSize: 19, color: authColors.textPrimary },
     sectionLink: { fontFamily: fontFamilies.displaySemiBold, fontSize: 13, color: authColors.accentCyan },
 
-    moduleCarousel: { gap: 14, paddingRight: 14 },
+    // The horizontal ScrollView wrapping this row clips on the Y axis (it
+    // has to, to avoid scrolling vertically too) and sizes its own height
+    // exactly to the tallest card with zero slack — so the hover lift
+    // (translateY) and its shadow, which both extend a bit beyond the
+    // card's own box, were getting clipped at the top/bottom edge with no
+    // room to breathe. paddingVertical gives them that room without
+    // touching the cards' own size/spacing.
+    moduleCarousel: { gap: 14, paddingRight: 14, paddingVertical: 10 },
     moduleCard: {
       width: 184,
       backgroundColor: authColors.cardBg,

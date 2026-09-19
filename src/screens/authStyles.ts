@@ -48,6 +48,9 @@ export const fontFamilies = {
 export function liftStyle(isHovered: boolean, pressed = false) {
   return {
     transform: [{ translateY: isHovered ? -3 : 0 }, { scale: pressed ? 0.97 : 1 }],
+    // Lets a lifted card visually clear its row neighbors instead of
+    // rendering underneath their (unlifted, but still later-in-DOM) edges.
+    zIndex: isHovered ? 5 : 0,
     shadowColor: authColors.accentCyan,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: isHovered ? 0.3 : 0,
