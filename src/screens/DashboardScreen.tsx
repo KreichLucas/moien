@@ -201,7 +201,7 @@ export function DashboardScreen() {
                 onPress={goToLearn}
                 onHoverIn={onHoverIn('heroButton')}
                 onHoverOut={onHoverOut('heroButton')}
-                style={({ pressed }) => liftStyle(hoveredId === 'heroButton', pressed)}
+                style={({ pressed }) => [{ alignSelf: 'flex-start' }, liftStyle(hoveredId === 'heroButton', pressed)]}
               >
                 <LinearGradient
                   colors={[authColors.accentCyan, authColors.accentBlue]}
