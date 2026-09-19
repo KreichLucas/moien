@@ -1,6 +1,14 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { DarkTheme, DefaultTheme, NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Caveat_600SemiBold } from '@expo-google-fonts/caveat';
+import {
+  Poppins_400Regular,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  Poppins_800ExtraBold,
+} from '@expo-google-fonts/poppins';
+import { useFonts } from 'expo-font';
 import React from 'react';
 import { ActivityIndicator, Text, View, useColorScheme } from 'react-native';
 import { DiamondRecoveryScreen } from '../screens/DiamondRecoveryScreen';
@@ -72,6 +80,13 @@ export function RootNavigator() {
   const scheme = useColorScheme();
   const colors: ThemeColors = scheme === 'dark' ? darkTheme : lightTheme;
   const { user, isAuthLoading } = useAuth();
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_800ExtraBold,
+    Caveat_600SemiBold,
+  });
   const navigationTheme = {
     ...(scheme === 'dark' ? DarkTheme : DefaultTheme),
     colors: {
@@ -84,7 +99,7 @@ export function RootNavigator() {
     },
   };
 
-  if (isAuthLoading) {
+  if (isAuthLoading || !fontsLoaded) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
         <ActivityIndicator color={colors.primary} />

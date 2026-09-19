@@ -25,7 +25,8 @@
       "baseUrl": "/moien"
     },
     "plugins": [
-      "expo-audio"
+      "expo-audio",
+      "expo-font"
     ]
   }
 }

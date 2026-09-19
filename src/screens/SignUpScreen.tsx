@@ -1,20 +1,23 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from 'react-native';
 import { AuthStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
-import { pressedStyle, useTheme } from '../theme/theme';
-import { makeAuthStyles } from './authStyles';
+import { AuthLayout } from './AuthLayout';
+import { authColors, makeAuthStyles } from './authStyles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
 export function SignUpScreen({ navigation }: Props) {
   const { signUp, authError, clearAuthError } = useAuth();
-  const colors = useTheme();
-  const styles = useMemo(() => makeAuthStyles(colors), [colors]);
+  const styles = useMemo(() => makeAuthStyles(), []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,66 +45,127 @@ export function SignUpScreen({ navigation }: Props) {
   };
 
   const errorText = localError ?? authError;
+  const isDisabled = isSubmitting || !email || !password || !confirmPassword;
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Criar conta</Text>
-      <Text style={styles.subtitle}>Seu progresso fica salvo só para você</Text>
+    <AuthLayout>
+      {/* eslint-disable-next-line @typescript-eslint/no-require-imports */}
+      <Image source={require('../../assets/moien-logo-3d.png')} style={styles.logo} resizeMode="contain" />
+      <Text style={styles.tagline}>Aprenda Luxemburguês{'\n'}de um jeito real</Text>
+
+      <Text style={styles.welcomeTitle}>Criar conta</Text>
+      <Text style={styles.welcomeSubtitle}>Seu progresso fica salvo só para você</Text>
 
       <View style={styles.form}>
-        <TextInput
-          style={styles.input}
-          placeholder="E-mail"
-          placeholderTextColor={colors.textSecondary}
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-          autoComplete="email"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Senha (mínimo 6 caracteres)"
-          placeholderTextColor={colors.textSecondary}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoComplete="password-new"
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Confirmar senha"
-          placeholderTextColor={colors.textSecondary}
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          autoComplete="password-new"
-        />
+        <View style={styles.inputWrapper}>
+          <Ionicons name="mail-outline" size={18} color={authColors.textSecondary} />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Seu e-mail"
+            placeholderTextColor={authColors.textMuted}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            autoComplete="email"
+          />
+        </View>
+
+        <View style={styles.inputWrapper}>
+          <Ionicons name="lock-closed-outline" size={18} color={authColors.textSecondary} />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Senha (mínimo 6 caracteres)"
+            placeholderTextColor={authColors.textMuted}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            autoComplete="password-new"
+          />
+          <Pressable onPress={() => setShowPassword((s) => !s)} hitSlop={8}>
+            <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={authColors.textSecondary} />
+          </Pressable>
+        </View>
+
+        <View style={styles.inputWrapper}>
+          <Ionicons name="lock-closed-outline" size={18} color={authColors.textSecondary} />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Confirmar senha"
+            placeholderTextColor={authColors.textMuted}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry={!showConfirmPassword}
+            autoComplete="password-new"
+          />
+          <Pressable onPress={() => setShowConfirmPassword((s) => !s)} hitSlop={8}>
+            <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={authColors.textSecondary} />
+          </Pressable>
+        </View>
 
         {errorText ? <Text style={styles.error}>{errorText}</Text> : null}
 
-        <Pressable
-          style={({ pressed }) => [styles.primaryButton, pressedStyle(pressed), isSubmitting && styles.buttonDisabled]}
-          onPress={handleSubmit}
-          disabled={isSubmitting || !email || !password || !confirmPassword}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color={colors.buttonTextOnPrimary} />
-          ) : (
-            <Text style={styles.primaryButtonText}>CRIAR CONTA</Text>
-          )}
+        <Pressable onPress={handleSubmit} disabled={isDisabled} style={isDisabled && styles.buttonDisabled}>
+          <LinearGradient
+            colors={[authColors.accentCyan, authColors.accentBlue]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.primaryButton}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <>
+                <Text style={styles.primaryButtonText}>CRIAR CONTA</Text>
+                <Ionicons name="arrow-forward" size={18} color="#FFFFFF" />
+              </>
+            )}
+          </LinearGradient>
         </Pressable>
 
-        <Pressable
-          style={styles.linkRow}
-          onPress={() => {
-            clearAuthError();
-            navigation.navigate('Login');
-          }}
-        >
-          <Text style={styles.linkText}>Já tem conta? Entrar</Text>
+        <View style={styles.linkRow}>
+          <Text style={styles.linkTextMuted}>Já tem conta?</Text>
+          <Pressable
+            onPress={() => {
+              clearAuthError();
+              navigation.navigate('Login');
+            }}
+          >
+            <Text style={styles.linkText}>Entrar</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>ou</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Login social ainda não configurado (Google/Apple) — placeholders visuais por enquanto. */}
+        <Pressable style={styles.socialButton}>
+          <Ionicons name="logo-google" size={18} color={authColors.textPrimary} />
+          <Text style={styles.socialButtonText}>Continuar com Google</Text>
         </Pressable>
+        <Pressable style={styles.socialButton}>
+          <Ionicons name="logo-apple" size={20} color={authColors.textPrimary} />
+          <Text style={styles.socialButtonText}>Continuar com Apple</Text>
+        </Pressable>
+
+        <View style={styles.benefitsRow}>
+          <View style={styles.benefitItem}>
+            <Ionicons name="bar-chart-outline" size={20} color={authColors.accentCyan} />
+            <Text style={styles.benefitText}>Pequenos passos{'\n'}Grandes resultados</Text>
+          </View>
+          <View style={styles.benefitItem}>
+            <Ionicons name="shield-checkmark-outline" size={20} color={authColors.accentCyan} />
+            <Text style={styles.benefitText}>Aprendizado{'\n'}seguro e eficiente</Text>
+          </View>
+          <View style={styles.benefitItem}>
+            <Ionicons name="people-outline" size={20} color={authColors.accentCyan} />
+            <Text style={styles.benefitText}>Junte-se a uma{'\n'}comunidade global</Text>
+          </View>
+        </View>
       </View>
-    </View>
+    </AuthLayout>
   );
 }
