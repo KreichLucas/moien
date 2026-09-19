@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { authColors, makeDashboardStyles } from '../screens/dashboardStyles';
@@ -5,7 +6,8 @@ import { pressedStyle } from '../theme/theme';
 
 export interface SidebarItem {
   id: string;
-  icon: string;
+  /** Base Ionicons name, e.g. "home" — the outline variant is used when inactive, the filled one when active. */
+  icon: keyof typeof Ionicons.glyphMap;
   label: string;
   active: boolean;
   onPress: () => void;
@@ -31,7 +33,11 @@ export function Sidebar({ items }: Props) {
             onPress={item.onPress}
             style={({ pressed }) => [styles.navItem, item.active && styles.navItemActive, pressedStyle(pressed)]}
           >
-            <Text style={styles.navItemIcon}>{item.icon}</Text>
+            <Ionicons
+              name={item.active ? item.icon : (`${item.icon}-outline` as keyof typeof Ionicons.glyphMap)}
+              size={19}
+              color={item.active ? authColors.accentCyan : authColors.textSecondary}
+            />
             <Text style={[styles.navItemLabel, item.active && styles.navItemLabelActive]}>{item.label}</Text>
           </Pressable>
         ))}

@@ -319,7 +319,16 @@ export function makeDashboardStyles() {
       shadowRadius: 16,
       elevation: 6,
     },
-    moduleIcon: { fontSize: 30, marginBottom: 12 },
+    moduleIconBadge: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      backgroundColor: 'rgba(56, 189, 248, 0.14)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    moduleIconBadgeActive: { backgroundColor: authColors.accentCyan },
     moduleTitle: { fontFamily: fontFamilies.displayBold, fontSize: 14, color: authColors.textPrimary },
     moduleProgressTrack: {
       height: 6,

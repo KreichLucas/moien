@@ -16,11 +16,21 @@ import { authColors, makeDashboardStyles } from './dashboardStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-/** Icons for the two legacy A1 units (not yet migrated to the icon-carrying "objective" format). */
-const MODULE_FALLBACK_ICONS: Record<string, string> = {
-  u3: '👨‍👩‍👧',
-  u4: '🍽️',
+/**
+ * Modern vector icons for the module carousel, keyed by unit id — kept local
+ * to the dashboard rather than touching `unit.icon` (still plain emoji),
+ * since the old trail/ObjectiveScreen render that field as-is and are out of
+ * scope for this redesign.
+ */
+const MODULE_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  'a1-obj1': 'chatbubbles',
+  'a1-obj2': 'chatbubble-ellipses',
+  'a1-obj3': 'calculator',
+  'a1-obj4': 'color-palette',
+  u3: 'people',
+  u4: 'restaurant',
 };
+const DEFAULT_MODULE_ICON: keyof typeof Ionicons.glyphMap = 'book';
 
 export function DashboardScreen() {
   const navigation = useNavigation<Nav>();
@@ -47,7 +57,13 @@ export function DashboardScreen() {
     () =>
       a1Units.map((u) => {
         const completed = u.lessons.filter((l) => progress.completedLessonIds.includes(l.id)).length;
-        return { id: u.id, title: u.title, icon: u.icon ?? MODULE_FALLBACK_ICONS[u.id] ?? '📘', completed, total: u.lessons.length };
+        return {
+          id: u.id,
+          title: u.title,
+          icon: MODULE_ICONS[u.id] ?? DEFAULT_MODULE_ICON,
+          completed,
+          total: u.lessons.length,
+        };
       }),
     [a1Units, progress.completedLessonIds]
   );
@@ -244,7 +260,9 @@ export function DashboardScreen() {
                   onPress={() => navigation.navigate('Objective', { unitId: m.id })}
                   style={({ pressed }) => [styles.moduleCard, isActive && styles.moduleCardActive, pressedStyle(pressed)]}
                 >
-                  <Text style={styles.moduleIcon}>{m.icon}</Text>
+                  <View style={[styles.moduleIconBadge, isActive && styles.moduleIconBadgeActive]}>
+                    <Ionicons name={m.icon} size={24} color={isActive ? '#FFFFFF' : authColors.accentCyan} />
+                  </View>
                   <Text style={styles.moduleTitle}>{m.title}</Text>
                   <View style={styles.moduleProgressTrack}>
                     <View style={[styles.moduleProgressFill, { width: `${pct}%` }]} />

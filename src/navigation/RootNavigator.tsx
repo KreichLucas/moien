@@ -8,9 +8,10 @@ import {
   Poppins_700Bold,
   Poppins_800ExtraBold,
 } from '@expo-google-fonts/poppins';
+import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import React, { useState } from 'react';
-import { ActivityIndicator, Text, View, useColorScheme, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, View, useColorScheme, useWindowDimensions } from 'react-native';
 import { AchievementsScreen } from '../screens/AchievementsScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { DiamondRecoveryScreen } from '../screens/DiamondRecoveryScreen';
@@ -36,9 +37,9 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const SIDEBAR_BREAKPOINT = 1000;
 
-function tabIcon(emoji: string) {
-  return ({ focused }: { focused: boolean }) => (
-    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.45 }}>{emoji}</Text>
+function tabIcon(name: keyof typeof Ionicons.glyphMap) {
+  return ({ focused, color }: { focused: boolean; color: string }) => (
+    <Ionicons name={focused ? name : (`${name}-outline` as keyof typeof Ionicons.glyphMap)} size={22} color={color} />
   );
 }
 
@@ -57,34 +58,34 @@ function MainTabs({ navigation }: MainTabsProps) {
   const sidebarItems: SidebarItem[] = [
     {
       id: 'home',
-      icon: '🏠',
+      icon: 'home',
       label: 'Início',
       active: activeTab === 'Home',
       onPress: () => navigation.navigate('Main', { screen: 'Home' }),
     },
-    { id: 'learn', icon: '📖', label: 'Aprender', active: false, onPress: () => navigation.navigate('Learn') },
+    { id: 'learn', icon: 'book', label: 'Aprender', active: false, onPress: () => navigation.navigate('Learn') },
     {
       id: 'practice',
-      icon: '🏋️',
+      icon: 'barbell',
       label: 'Prática',
       active: activeTab === 'Practice',
       onPress: () => navigation.navigate('Main', { screen: 'Practice' }),
     },
     {
       id: 'achievements',
-      icon: '🏆',
+      icon: 'trophy',
       label: 'Conquistas',
       active: false,
       onPress: () => navigation.navigate('Achievements'),
     },
     {
       id: 'profile',
-      icon: '👤',
+      icon: 'person-circle',
       label: 'Perfil',
       active: activeTab === 'Profile',
       onPress: () => navigation.navigate('Main', { screen: 'Profile' }),
     },
-    { id: 'settings', icon: '⚙️', label: 'Configurações', active: false, onPress: () => navigation.navigate('Settings') },
+    { id: 'settings', icon: 'settings', label: 'Configurações', active: false, onPress: () => navigation.navigate('Settings') },
   ];
 
   return (
@@ -112,19 +113,19 @@ function MainTabs({ navigation }: MainTabsProps) {
           <Tab.Screen
             name="Home"
             component={DashboardScreen}
-            options={{ tabBarLabel: 'Início', tabBarIcon: tabIcon('🏠') }}
+            options={{ tabBarLabel: 'Início', tabBarIcon: tabIcon('home') }}
             listeners={{ focus: () => setActiveTab('Home') }}
           />
           <Tab.Screen
             name="Practice"
             component={PracticeScreen}
-            options={{ tabBarLabel: 'Praticar', tabBarIcon: tabIcon('🏋️') }}
+            options={{ tabBarLabel: 'Praticar', tabBarIcon: tabIcon('barbell') }}
             listeners={{ focus: () => setActiveTab('Practice') }}
           />
           <Tab.Screen
             name="Profile"
             component={ProfileScreen}
-            options={{ tabBarLabel: 'Perfil', tabBarIcon: tabIcon('🧑‍🎓') }}
+            options={{ tabBarLabel: 'Perfil', tabBarIcon: tabIcon('person-circle') }}
             listeners={{ focus: () => setActiveTab('Profile') }}
           />
         </Tab.Navigator>
