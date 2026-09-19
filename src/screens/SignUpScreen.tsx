@@ -5,13 +5,14 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from 'react-native';
 import { AuthStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
+import { pressedStyle } from '../theme/theme';
 import { AuthLayout } from './AuthLayout';
 import { authColors, makeAuthStyles } from './authStyles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
 export function SignUpScreen({ navigation }: Props) {
-  const { signUp, authError, clearAuthError } = useAuth();
+  const { signUp, signInWithGoogle, authError, clearAuthError } = useAuth();
   const styles = useMemo(() => makeAuthStyles(), []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,6 +21,7 @@ export function SignUpScreen({ navigation }: Props) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     clearAuthError();
@@ -41,6 +43,19 @@ export function SignUpScreen({ navigation }: Props) {
       // authError já foi definido pelo AuthContext
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    clearAuthError();
+    setLocalError(null);
+    setIsGoogleSubmitting(true);
+    try {
+      await signInWithGoogle();
+    } catch {
+      // authError já foi definido pelo AuthContext
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -141,14 +156,19 @@ export function SignUpScreen({ navigation }: Props) {
           <View style={styles.dividerLine} />
         </View>
 
-        {/* Login social ainda não configurado (Google/Apple) — placeholders visuais por enquanto. */}
-        <Pressable style={styles.socialButton}>
-          <Ionicons name="logo-google" size={18} color={authColors.textPrimary} />
-          <Text style={styles.socialButtonText}>Continuar com Google</Text>
-        </Pressable>
-        <Pressable style={styles.socialButton}>
-          <Ionicons name="logo-apple" size={20} color={authColors.textPrimary} />
-          <Text style={styles.socialButtonText}>Continuar com Apple</Text>
+        <Pressable
+          style={({ pressed }) => [styles.socialButton, pressedStyle(pressed), isGoogleSubmitting && styles.buttonDisabled]}
+          onPress={handleGoogleSignIn}
+          disabled={isGoogleSubmitting}
+        >
+          {isGoogleSubmitting ? (
+            <ActivityIndicator color={authColors.textPrimary} />
+          ) : (
+            <>
+              <Ionicons name="logo-google" size={18} color={authColors.textPrimary} />
+              <Text style={styles.socialButtonText}>Continuar com Google</Text>
+            </>
+          )}
         </Pressable>
 
         <View style={styles.benefitsRow}>

@@ -1,8 +1,10 @@
 import {
+  GoogleAuthProvider,
   User,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -24,6 +26,11 @@ function mapAuthError(code: string): string {
       return 'Muitas tentativas. Tente novamente mais tarde.';
     case 'auth/unauthorized-domain':
       return 'Este site ainda não está autorizado a fazer login.';
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return '';
+    case 'auth/popup-blocked':
+      return 'O navegador bloqueou a janela de login. Permita pop-ups para este site e tente de novo.';
     default:
       return 'Algo deu errado. Tente novamente.';
   }
@@ -35,6 +42,7 @@ interface AuthContextValue {
   authError: string | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOutUser: () => Promise<void>;
   clearAuthError: () => void;
 }
@@ -74,6 +82,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    setAuthError(null);
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (error: any) {
+      setAuthError(mapAuthError(error.code));
+      throw error;
+    }
+  };
+
   const signOutUser = async () => {
     await signOut(auth);
   };
@@ -81,7 +99,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthError = () => setAuthError(null);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthLoading, authError, signIn, signUp, signOutUser, clearAuthError }}>
+    <AuthContext.Provider
+      value={{ user, isAuthLoading, authError, signIn, signUp, signInWithGoogle, signOutUser, clearAuthError }}
+    >
       {children}
     </AuthContext.Provider>
   );
