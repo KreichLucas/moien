@@ -5,8 +5,6 @@ export const LEVEL_LABELS: Record<CEFRLevel, string> = {
   A2: 'A2 · Básico',
   B1: 'B1 · Intermediário',
   B2: 'B2 · Intermediário superior',
-  C1: 'C1 · Avançado',
-  C2: 'C2 · Proficiente',
 };
 
 export interface LevelProgress {
