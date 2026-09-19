@@ -14,3 +14,8 @@ export type MainTabParamList = {
   Practice: undefined;
   Profile: undefined;
 };
+
+export type AuthStackParamList = {
+  Login: undefined;
+  SignUp: undefined;
+};

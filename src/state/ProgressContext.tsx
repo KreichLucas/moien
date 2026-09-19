@@ -3,6 +3,7 @@ import { hasExerciseVariety } from '../learning/itemExtraction';
 import { ITEM_REGISTRY } from '../learning/registry';
 import { recordAttempt } from '../learning/srs';
 import { AttemptResult } from '../learning/types';
+import { useAuth } from './AuthContext';
 import {
   PendingLessonState,
   ProgressState,
@@ -172,19 +173,27 @@ interface ProgressContextValue {
 const ProgressContext = createContext<ProgressContextValue | undefined>(undefined);
 
 export function ProgressProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
+  const uid = user?.uid ?? null;
   const [progress, dispatch] = useReducer(reducer, initialProgressState);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   useEffect(() => {
-    loadProgress().then((state) => {
+    // Limpa o estado em memória antes de carregar o próximo usuário, para
+    // não vazar progresso de uma conta pra outra ao trocar de usuário sem
+    // recarregar a página (comum na versão web).
+    dispatch({ type: 'RESET' });
+    setIsLoaded(false);
+    if (!uid) return;
+    loadProgress(uid).then((state) => {
       dispatch({ type: 'HYDRATE', state });
       setIsLoaded(true);
     });
-  }, []);
+  }, [uid]);
 
   useEffect(() => {
-    if (isLoaded) saveProgress(progress);
-  }, [progress, isLoaded]);
+    if (isLoaded && uid) saveProgress(uid, progress);
+  }, [progress, isLoaded, uid]);
 
   const completeLesson = (lessonId: string, xpEarned: number, wasPerfect: boolean, attempts: AttemptResult[]) => {
     dispatch({ type: 'RECORD_LESSON_RESULT', lessonId, xpEarned, wasPerfect, attempts });
@@ -208,7 +217,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   const resetProgress = () => {
     dispatch({ type: 'RESET' });
-    clearProgress();
+    if (uid) clearProgress(uid);
   };
 
   return (

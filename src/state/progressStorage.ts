@@ -1,4 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { doc, deleteDoc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
 import { AttemptResult, ItemMasteryState } from '../learning/types';
 import { SessionCard } from '../learning/engine';
 
@@ -63,22 +64,16 @@ export const initialProgressState: ProgressState = {
   pendingReviewItemIds: [],
 };
 
-const STORAGE_KEY = 'moien:progress';
-
-export async function loadProgress(): Promise<ProgressState> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  if (!raw) return initialProgressState;
-  try {
-    return { ...initialProgressState, ...JSON.parse(raw) };
-  } catch {
-    return initialProgressState;
-  }
+export async function loadProgress(uid: string): Promise<ProgressState> {
+  const snap = await getDoc(doc(db, 'progress', uid));
+  if (!snap.exists()) return initialProgressState;
+  return { ...initialProgressState, ...(snap.data() as Partial<ProgressState>) };
 }
 
-export async function saveProgress(state: ProgressState): Promise<void> {
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+export async function saveProgress(uid: string, state: ProgressState): Promise<void> {
+  await setDoc(doc(db, 'progress', uid), state);
 }
 
-export async function clearProgress(): Promise<void> {
-  await AsyncStorage.removeItem(STORAGE_KEY);
+export async function clearProgress(uid: string): Promise<void> {
+  await deleteDoc(doc(db, 'progress', uid));
 }

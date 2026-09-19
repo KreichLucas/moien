@@ -2,6 +2,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
+import { useAuth } from '../state/AuthContext';
 import { useProgress } from '../state/ProgressContext';
 import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 
@@ -9,6 +10,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
 export function SettingsScreen({ navigation }: Props) {
   const { resetProgress } = useProgress();
+  const { user, signOutUser } = useAuth();
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [confirmVisible, setConfirmVisible] = useState(false);
@@ -27,6 +29,18 @@ export function SettingsScreen({ navigation }: Props) {
         </Pressable>
         <Text style={styles.headerTitle}>Configurações</Text>
         <View style={styles.headerSpacer} />
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Conta</Text>
+        {user?.email ? <Text style={styles.hint}>{user.email}</Text> : null}
+        <Pressable
+          style={({ pressed }) => [styles.actionRow, pressedStyle(pressed)]}
+          onPress={() => signOutUser()}
+        >
+          <Text style={styles.actionText}>Sair</Text>
+          <Text style={styles.chevron}>›</Text>
+        </Pressable>
       </View>
 
       <View style={styles.section}>
@@ -102,6 +116,18 @@ function makeStyles(colors: ThemeColors) {
       ...cardShadow(colors),
     },
     dangerText: { fontSize: 15, fontWeight: '700', color: colors.danger },
+    actionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.surface,
+      borderRadius: 14,
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      marginTop: 8,
+      ...cardShadow(colors),
+    },
+    actionText: { fontSize: 15, fontWeight: '700', color: colors.text },
     chevron: { fontSize: 18, color: colors.textSecondary },
     hint: { fontSize: 12, color: colors.textSecondary, marginTop: 8, lineHeight: 17 },
     footer: { marginTop: 'auto', alignItems: 'center', paddingBottom: 20 },
