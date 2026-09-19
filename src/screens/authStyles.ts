@@ -37,24 +37,14 @@ export function makeAuthStyles() {
     page: {
       flex: 1,
       minHeight: '100%',
+      flexDirection: 'column',
       backgroundColor: authColors.pageBg,
       overflow: 'hidden',
     },
-    scrollBody: {
+    stage: {
       flex: 1,
-    },
-    scrollContent: {
-      flexGrow: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 32,
-      paddingHorizontal: 24,
-    },
-    scrollContentNarrow: {
-      // Clears the absolutely-positioned language selector, which would
-      // otherwise sit on top of the card's logo at narrow widths.
-      paddingTop: 112,
-      paddingHorizontal: 16,
     },
     blob: {
       position: 'absolute',
@@ -88,10 +78,14 @@ export function makeAuthStyles() {
       right: -100,
       backgroundColor: authColors.blobCyan,
     },
+    langSelectorRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingTop: 20,
+      paddingRight: 24,
+      zIndex: 2,
+    },
     langSelector: {
-      position: 'absolute',
-      top: 28,
-      right: 28,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
