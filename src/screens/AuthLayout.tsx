@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useMemo, useState } from 'react';
-import { LayoutChangeEvent, Text, View, useWindowDimensions } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { LayoutChangeEvent, Platform, Text, View, useWindowDimensions } from 'react-native';
 import { authColors, makeAuthStyles } from './authStyles';
 
 const EDGE_MARGIN = 20;
@@ -8,7 +8,34 @@ const EDGE_MARGIN = 20;
 type Size = { width: number; height: number };
 const emptySize: Size = { width: 0, height: 0 };
 
+// The browser's own autofill styling (e.g. suggesting a saved e-mail) forces
+// a light background + black text on <input>, ignoring our React Native
+// styles entirely — only a `:-webkit-autofill` CSS override can beat it.
+function useAutofillStyleFix() {
+  useEffect(() => {
+    if (Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const id = 'moien-auth-autofill-fix';
+    if (document.getElementById(id)) return;
+    const style = document.createElement('style');
+    style.id = id;
+    style.textContent = `
+      input:-webkit-autofill,
+      input:-webkit-autofill:hover,
+      input:-webkit-autofill:focus,
+      input:-webkit-autofill:active {
+        -webkit-text-fill-color: ${authColors.textPrimary} !important;
+        -webkit-box-shadow: 0 0 0px 1000px ${authColors.inputBg} inset !important;
+        box-shadow: 0 0 0px 1000px ${authColors.inputBg} inset !important;
+        caret-color: ${authColors.textPrimary};
+        transition: background-color 9999s ease-in-out 0s;
+      }
+    `;
+    document.head.appendChild(style);
+  }, []);
+}
+
 export function AuthLayout({ children }: { children: React.ReactNode }) {
+  useAutofillStyleFix();
   const { width } = useWindowDimensions();
   const showSidePanels = width >= 1100;
   const isNarrow = width < 480;
