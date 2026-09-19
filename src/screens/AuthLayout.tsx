@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo } from 'react';
-import { Text, View, useWindowDimensions } from 'react-native';
+import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { authColors, makeAuthStyles } from './authStyles';
 
 export function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const styles = useMemo(() => makeAuthStyles(), []);
 
   return (
-    <View style={[styles.page, isNarrow && styles.pageNarrow]}>
+    <View style={styles.page}>
       <View pointerEvents="none" style={[styles.blob, styles.blobTopLeftOuter]} />
       <View pointerEvents="none" style={[styles.blob, styles.blobTopLeftInner]} />
       <View pointerEvents="none" style={[styles.blob, styles.blobBottomRightOuter]} />
@@ -22,28 +22,33 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         <Ionicons name="chevron-down" size={14} color={authColors.textSecondary} />
       </View>
 
-      <View style={[styles.contentRow, !showSidePanels && styles.contentRowCentered]}>
-        {showSidePanels && (
-          <View style={styles.leftPanel}>
-            <Text style={styles.leftHeadline}>
-              Mais que{'\n'}
-              <Text style={styles.leftHeadlineAccent}>um idioma</Text>
-            </Text>
-            <View style={styles.leftDivider} />
-            <Text style={styles.leftParagraph}>Abra novas oportunidades{'\n'}com o luxemburguês.</Text>
-          </View>
-        )}
+      <ScrollView
+        style={styles.scrollBody}
+        contentContainerStyle={[styles.scrollContent, isNarrow && styles.scrollContentNarrow]}
+      >
+        <View style={[styles.contentRow, !showSidePanels && styles.contentRowCentered]}>
+          {showSidePanels && (
+            <View style={styles.leftPanel}>
+              <Text style={styles.leftHeadline}>
+                Mais que{'\n'}
+                <Text style={styles.leftHeadlineAccent}>um idioma</Text>
+              </Text>
+              <View style={styles.leftDivider} />
+              <Text style={styles.leftParagraph}>Abra novas oportunidades{'\n'}com o luxemburguês.</Text>
+            </View>
+          )}
 
-        <View style={[styles.card, isNarrow && styles.cardNarrow]}>{children}</View>
+          <View style={[styles.card, isNarrow && styles.cardNarrow]}>{children}</View>
 
-        {showSidePanels && (
-          <View style={styles.rightPanel}>
-            <Text style={styles.rightScript}>Moien</Text>
-            <Text style={[styles.rightScript, styles.rightScriptSecond]}>Nei Méiglechkeeten</Text>
-            <View style={styles.rightUnderline} />
-          </View>
-        )}
-      </View>
+          {showSidePanels && (
+            <View style={styles.rightPanel}>
+              <Text style={styles.rightScript}>Moien</Text>
+              <Text style={[styles.rightScript, styles.rightScriptSecond]}>Nei Méiglechkeeten</Text>
+              <View style={styles.rightUnderline} />
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 }

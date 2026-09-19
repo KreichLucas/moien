@@ -39,10 +39,18 @@ export function makeAuthStyles() {
       minHeight: '100%',
       backgroundColor: authColors.pageBg,
       overflow: 'hidden',
+    },
+    scrollBody: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
       paddingVertical: 32,
       paddingHorizontal: 24,
     },
-    pageNarrow: {
+    scrollContentNarrow: {
       // Clears the absolutely-positioned language selector, which would
       // otherwise sit on top of the card's logo at narrow widths.
       paddingTop: 112,
@@ -170,7 +178,7 @@ export function makeAuthStyles() {
       borderRadius: 32,
       borderWidth: 1,
       borderColor: authColors.cardBorder,
-      paddingVertical: 40,
+      paddingVertical: 32,
       paddingHorizontal: 40,
       shadowColor: authColors.accentBlue,
       shadowOffset: { width: 0, height: 20 },
@@ -184,8 +192,8 @@ export function makeAuthStyles() {
       paddingHorizontal: 20,
     },
     logo: {
-      width: 220,
-      height: 74,
+      width: 190,
+      height: 64,
       alignSelf: 'center',
     },
     tagline: {
@@ -193,7 +201,7 @@ export function makeAuthStyles() {
       fontSize: 14,
       color: authColors.textSecondary,
       textAlign: 'center',
-      marginTop: 12,
+      marginTop: 8,
       lineHeight: 20,
     },
     welcomeTitle: {
@@ -201,7 +209,7 @@ export function makeAuthStyles() {
       fontSize: 24,
       color: authColors.textPrimary,
       textAlign: 'center',
-      marginTop: 28,
+      marginTop: 20,
     },
     welcomeSubtitle: {
       fontFamily: fontFamilies.displayRegular,
@@ -209,7 +217,7 @@ export function makeAuthStyles() {
       color: authColors.textSecondary,
       textAlign: 'center',
       marginTop: 6,
-      marginBottom: 28,
+      marginBottom: 20,
     },
     form: { width: '100%' },
     inputWrapper: {
@@ -220,8 +228,8 @@ export function makeAuthStyles() {
       borderWidth: 1,
       borderColor: authColors.inputBorder,
       paddingHorizontal: 18,
-      height: 56,
-      marginBottom: 14,
+      height: 52,
+      marginBottom: 12,
       gap: 12,
     },
     inputField: {
@@ -238,8 +246,8 @@ export function makeAuthStyles() {
       justifyContent: 'center',
       gap: 10,
       borderRadius: 16,
-      paddingVertical: 17,
-      marginTop: 6,
+      paddingVertical: 15,
+      marginTop: 4,
       shadowColor: authColors.accentCyan,
       shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 0.4,
@@ -253,10 +261,10 @@ export function makeAuthStyles() {
       fontSize: 16,
       letterSpacing: 0.6,
     },
-    linkRow: { marginTop: 20, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 4 },
+    linkRow: { marginTop: 14, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 4 },
     linkTextMuted: { color: authColors.textSecondary, fontFamily: fontFamilies.displayRegular, fontSize: 14 },
     linkText: { color: authColors.accentCyan, fontFamily: fontFamilies.displaySemiBold, fontSize: 14 },
-    dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 24, gap: 12 },
+    dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16, gap: 12 },
     dividerLine: { flex: 1, height: 1, backgroundColor: authColors.divider },
     dividerText: { color: authColors.textMuted, fontFamily: fontFamilies.displayRegular, fontSize: 13 },
     socialButton: {
@@ -268,15 +276,15 @@ export function makeAuthStyles() {
       borderWidth: 1,
       borderColor: authColors.inputBorder,
       borderRadius: 16,
-      paddingVertical: 15,
-      marginBottom: 12,
+      paddingVertical: 13,
+      marginBottom: 10,
     },
     socialButtonText: { color: authColors.textPrimary, fontFamily: fontFamilies.displaySemiBold, fontSize: 14 },
     benefitsRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: 28,
-      paddingTop: 24,
+      marginTop: 18,
+      paddingTop: 16,
       borderTopWidth: 1,
       borderTopColor: authColors.divider,
     },
