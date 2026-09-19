@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../firebase/firebaseConfig';
@@ -41,7 +42,7 @@ interface AuthContextValue {
   isAuthLoading: boolean;
   authError: string | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOutUser: () => Promise<void>;
   clearAuthError: () => void;
@@ -72,10 +73,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     setAuthError(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(credential.user, { displayName: name.trim() });
+      // updateProfile mutates credential.user in place but doesn't reliably
+      // re-fire onAuthStateChanged, so the dashboard could still show the
+      // pre-name fallback until something else triggers a refresh — force
+      // it here.
+      setUser({ ...credential.user } as User);
     } catch (error: any) {
       setAuthError(mapAuthError(error.code));
       throw error;

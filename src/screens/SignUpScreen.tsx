@@ -14,6 +14,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 export function SignUpScreen({ navigation }: Props) {
   const { signUp, signInWithGoogle, authError, clearAuthError } = useAuth();
   const styles = useMemo(() => makeAuthStyles(), []);
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -27,6 +28,10 @@ export function SignUpScreen({ navigation }: Props) {
     clearAuthError();
     setLocalError(null);
 
+    if (!name.trim()) {
+      setLocalError('Digite seu nome.');
+      return;
+    }
     if (password.length < 6) {
       setLocalError('A senha precisa ter pelo menos 6 caracteres.');
       return;
@@ -38,7 +43,7 @@ export function SignUpScreen({ navigation }: Props) {
 
     setIsSubmitting(true);
     try {
-      await signUp(email.trim(), password);
+      await signUp(email.trim(), password, name.trim());
     } catch {
       // authError já foi definido pelo AuthContext
     } finally {
@@ -60,7 +65,7 @@ export function SignUpScreen({ navigation }: Props) {
   };
 
   const errorText = localError ?? authError;
-  const isDisabled = isSubmitting || !email || !password || !confirmPassword;
+  const isDisabled = isSubmitting || !name || !email || !password || !confirmPassword;
 
   return (
     <AuthLayout>
@@ -72,6 +77,19 @@ export function SignUpScreen({ navigation }: Props) {
       <Text style={styles.welcomeSubtitle}>Seu progresso fica salvo só para você</Text>
 
       <View style={styles.form}>
+        <View style={styles.inputWrapper}>
+          <Ionicons name="person-outline" size={18} color={authColors.textSecondary} />
+          <TextInput
+            style={styles.inputField}
+            placeholder="Seu nome"
+            placeholderTextColor={authColors.textMuted}
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+            autoComplete="name"
+          />
+        </View>
+
         <View style={styles.inputWrapper}>
           <Ionicons name="mail-outline" size={18} color={authColors.textSecondary} />
           <TextInput
