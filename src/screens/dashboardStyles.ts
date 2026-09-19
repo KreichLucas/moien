@@ -236,6 +236,12 @@ export function makeDashboardStyles() {
     // tall as the margin. The spacing instead lives on `heroButtonWrap`,
     // a plain View one level up with no shadow of its own to leak.
     heroButtonWrap: { marginTop: 24, alignSelf: 'flex-start' },
+    // `borderRadius: 16` here must match the `borderRadius: 16` applied
+    // inline to the Pressable wrapping this in DashboardScreen. The hover
+    // glow's box-shadow is cast by that Pressable, not by this pill — if
+    // the Pressable stays square-cornered while this pill is rounded, the
+    // shadow's blur doesn't follow the pill's curve and pokes out past it
+    // at the corners as a small squarish residue.
     heroButton: {
       flexDirection: 'row',
       alignItems: 'center',

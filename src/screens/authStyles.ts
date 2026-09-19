@@ -44,13 +44,25 @@ export const fontFamilies = {
  * but bleeds into the gap of neighboring cards in a row (looking like a
  * ghost outline) and turns into a big rectangular smear behind a wide
  * button, so this stays tight and close to the element instead.
+ *
+ * `radius` is a required argument, not a default, on purpose: the shadow
+ * is cast by whatever element this style lands on, and if that element's
+ * own corner radius doesn't match the rounded shape it visually wraps (a
+ * pill, an icon button, a card), the shadow's blur follows sharp square
+ * corners while the visible shape underneath it is round — leaving a
+ * small squarish residue poking out past the rounded edge. That exact bug
+ * showed up independently on three different buttons because each call
+ * site had to remember to set `borderRadius` itself; making it a required
+ * parameter here means every future caller is forced to make the call
+ * instead of silently inheriting a square corner.
  */
-export function liftStyle(isHovered: boolean, pressed = false) {
+export function liftStyle(isHovered: boolean, radius: number, pressed = false) {
   return {
     transform: [{ translateY: isHovered ? -3 : 0 }, { scale: pressed ? 0.97 : 1 }],
     // Lets a lifted card visually clear its row neighbors instead of
     // rendering underneath their (unlifted, but still later-in-DOM) edges.
     zIndex: isHovered ? 5 : 0,
+    borderRadius: radius,
     shadowColor: authColors.accentCyan,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: isHovered ? 0.3 : 0,
@@ -261,6 +273,10 @@ export function makeAuthStyles() {
       height: '100%',
     },
     error: { fontFamily: fontFamilies.displaySemiBold, fontSize: 13, color: authColors.danger, marginBottom: 12, textAlign: 'center' },
+    // This `borderRadius: 16` must match the radius passed to `liftStyle`
+    // on the Pressable wrapping this in Login/SignUpScreen (see the
+    // comment on `liftStyle` for why the shadow-casting element's corner
+    // radius has to agree with the visible pill's).
     primaryButton: {
       flexDirection: 'row',
       alignItems: 'center',

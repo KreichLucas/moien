@@ -37,7 +37,7 @@ export function Sidebar({ items }: Props) {
             style={({ pressed }) => [
               styles.navItem,
               item.active && styles.navItemActive,
-              liftStyle(hoveredId === item.id, pressed),
+              liftStyle(hoveredId === item.id, 14, pressed),
             ]}
           >
             <Ionicons

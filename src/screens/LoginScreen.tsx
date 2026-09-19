@@ -90,7 +90,7 @@ export function LoginScreen({ navigation }: Props) {
             onPress={() => setShowPassword((s) => !s)}
             onHoverIn={() => isHoverReady() && setEyeHovered(true)}
             onHoverOut={() => setEyeHovered(false)}
-            style={({ pressed }) => liftStyle(eyeHovered, pressed)}
+            style={({ pressed }) => liftStyle(eyeHovered, 10, pressed)}
             hitSlop={8}
           >
             <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={authColors.textSecondary} />
@@ -106,7 +106,7 @@ export function LoginScreen({ navigation }: Props) {
           onHoverOut={() => setPrimaryHovered(false)}
           style={({ pressed }) => [
             { marginTop: 4 },
-            !isDisabled && liftStyle(primaryHovered, pressed),
+            !isDisabled && liftStyle(primaryHovered, 16, pressed),
             isDisabled && styles.buttonDisabled,
           ]}
         >
@@ -136,7 +136,7 @@ export function LoginScreen({ navigation }: Props) {
             }}
             onHoverIn={() => isHoverReady() && setLinkHovered(true)}
             onHoverOut={() => setLinkHovered(false)}
-            style={({ pressed }) => liftStyle(linkHovered, pressed)}
+            style={({ pressed }) => liftStyle(linkHovered, 8, pressed)}
           >
             <Text style={styles.linkText}>Criar conta</Text>
           </Pressable>
@@ -149,7 +149,7 @@ export function LoginScreen({ navigation }: Props) {
         </View>
 
         <Pressable
-          style={({ pressed }) => [styles.socialButton, liftStyle(googleHovered, pressed), isGoogleSubmitting && styles.buttonDisabled]}
+          style={({ pressed }) => [styles.socialButton, liftStyle(googleHovered, 16, pressed), isGoogleSubmitting && styles.buttonDisabled]}
           onPress={handleGoogleSignIn}
           onHoverIn={() => isHoverReady() && setGoogleHovered(true)}
           onHoverOut={() => setGoogleHovered(false)}

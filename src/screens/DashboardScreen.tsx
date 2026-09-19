@@ -118,7 +118,7 @@ export function DashboardScreen() {
 
             <View style={styles.profilePillWrap}>
               <Pressable
-                style={({ pressed }) => [styles.profilePill, liftStyle(hoveredId === 'profilePill', pressed)]}
+                style={({ pressed }) => [styles.profilePill, liftStyle(hoveredId === 'profilePill', 999, pressed)]}
                 onPress={() => setProfileMenuOpen((o) => !o)}
                 onHoverIn={onHoverIn('profilePill')}
                 onHoverOut={onHoverOut('profilePill')}
@@ -132,7 +132,7 @@ export function DashboardScreen() {
               {profileMenuOpen && (
                 <View style={styles.profileMenu}>
                   <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-perfil', pressed)]}
+                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-perfil', 10, pressed)]}
                     onPress={() => {
                       setProfileMenuOpen(false);
                       navigation.navigate('Main', { screen: 'Profile' });
@@ -143,7 +143,7 @@ export function DashboardScreen() {
                     <Text style={styles.profileMenuItemText}>Perfil</Text>
                   </Pressable>
                   <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-config', pressed)]}
+                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-config', 10, pressed)]}
                     onPress={() => {
                       setProfileMenuOpen(false);
                       navigation.navigate('Settings');
@@ -154,7 +154,7 @@ export function DashboardScreen() {
                     <Text style={styles.profileMenuItemText}>Configurações</Text>
                   </Pressable>
                   <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-sair', pressed)]}
+                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-sair', 10, pressed)]}
                     onPress={() => {
                       setProfileMenuOpen(false);
                       signOutUser();
@@ -202,7 +202,10 @@ export function DashboardScreen() {
                   onPress={goToLearn}
                   onHoverIn={onHoverIn('heroButton')}
                   onHoverOut={onHoverOut('heroButton')}
-                  style={({ pressed }) => [{ alignSelf: 'flex-start' }, liftStyle(hoveredId === 'heroButton', pressed)]}
+                  style={({ pressed }) => [
+                    { alignSelf: 'flex-start' },
+                    liftStyle(hoveredId === 'heroButton', 16, pressed),
+                  ]}
                 >
                   <LinearGradient
                     colors={[authColors.accentCyan, authColors.accentBlue]}
@@ -230,7 +233,7 @@ export function DashboardScreen() {
                   onPress={goToLearn}
                   onHoverIn={onHoverIn('verDetalhes')}
                   onHoverOut={onHoverOut('verDetalhes')}
-                  style={({ pressed }) => liftStyle(hoveredId === 'verDetalhes', pressed)}
+                  style={({ pressed }) => liftStyle(hoveredId === 'verDetalhes', 8, pressed)}
                 >
                   <Text style={styles.progressLink}>Ver detalhes →</Text>
                 </Pressable>
@@ -276,7 +279,7 @@ export function DashboardScreen() {
               onPress={goToLearn}
               onHoverIn={onHoverIn('verTodos')}
               onHoverOut={onHoverOut('verTodos')}
-              style={({ pressed }) => liftStyle(hoveredId === 'verTodos', pressed)}
+              style={({ pressed }) => liftStyle(hoveredId === 'verTodos', 8, pressed)}
             >
               <Text style={styles.sectionLink}>Ver todos os módulos →</Text>
             </Pressable>
@@ -295,7 +298,7 @@ export function DashboardScreen() {
                   style={({ pressed }) => [
                     styles.moduleCard,
                     isActive && styles.moduleCardActive,
-                    liftStyle(hoveredId === `module-${m.id}`, pressed),
+                    liftStyle(hoveredId === `module-${m.id}`, 20, pressed),
                   ]}
                 >
                   <View style={[styles.moduleIconBadge, isActive && styles.moduleIconBadgeActive]}>
@@ -371,7 +374,7 @@ export function DashboardScreen() {
                 <Text style={styles.phrasePt}>{phrase.pt}</Text>
               </View>
               <Pressable
-                style={({ pressed }) => [styles.phraseAudioButton, liftStyle(hoveredId === 'audio', pressed)]}
+                style={({ pressed }) => [styles.phraseAudioButton, liftStyle(hoveredId === 'audio', 26, pressed)]}
                 onPress={handlePlayPhrase}
                 onHoverIn={onHoverIn('audio')}
                 onHoverOut={onHoverOut('audio')}
