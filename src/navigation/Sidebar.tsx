@@ -1,8 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
-import { authColors, makeDashboardStyles } from '../screens/dashboardStyles';
-import { pressedStyle } from '../theme/theme';
+import { authColors, liftStyle, makeDashboardStyles } from '../screens/dashboardStyles';
 
 export interface SidebarItem {
   id: string;
@@ -20,6 +19,8 @@ interface Props {
 const styles = makeDashboardStyles();
 
 export function Sidebar({ items }: Props) {
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+
   return (
     <View style={styles.sidebar}>
       <View style={styles.sidebarTop}>
@@ -31,7 +32,13 @@ export function Sidebar({ items }: Props) {
           <Pressable
             key={item.id}
             onPress={item.onPress}
-            style={({ pressed }) => [styles.navItem, item.active && styles.navItemActive, pressedStyle(pressed)]}
+            onHoverIn={() => setHoveredId(item.id)}
+            onHoverOut={() => setHoveredId((id) => (id === item.id ? null : id))}
+            style={({ pressed }) => [
+              styles.navItem,
+              item.active && styles.navItemActive,
+              liftStyle(hoveredId === item.id, pressed),
+            ]}
           >
             <Ionicons
               name={item.active ? item.icon : (`${item.icon}-outline` as keyof typeof Ionicons.glyphMap)}

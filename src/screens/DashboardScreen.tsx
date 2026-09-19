@@ -10,9 +10,8 @@ import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
 import { useProgress } from '../state/ProgressContext';
-import { pressedStyle } from '../theme/theme';
 import { CEFR_LEVELS } from '../types/content';
-import { authColors, makeDashboardStyles } from './dashboardStyles';
+import { authColors, liftStyle, makeDashboardStyles } from './dashboardStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -41,6 +40,9 @@ export function DashboardScreen() {
   const styles = useMemo(() => makeDashboardStyles(), []);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const onHoverIn = (id: string) => () => setHoveredId(id);
+  const onHoverOut = (id: string) => () => setHoveredId((current) => (current === id ? null : current));
 
   const levelProgress = getLevelProgress(units, progress.completedLessonIds);
   const levelPct =
@@ -113,7 +115,12 @@ export function DashboardScreen() {
             </View>
 
             <View style={styles.profilePillWrap}>
-              <Pressable style={styles.profilePill} onPress={() => setProfileMenuOpen((o) => !o)}>
+              <Pressable
+                style={({ pressed }) => [styles.profilePill, liftStyle(hoveredId === 'profilePill', pressed)]}
+                onPress={() => setProfileMenuOpen((o) => !o)}
+                onHoverIn={onHoverIn('profilePill')}
+                onHoverOut={onHoverOut('profilePill')}
+              >
                 <View style={styles.profileAvatar}>
                   <Text style={styles.profileAvatarText}>{initials}</Text>
                 </View>
@@ -123,29 +130,35 @@ export function DashboardScreen() {
               {profileMenuOpen && (
                 <View style={styles.profileMenu}>
                   <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, pressedStyle(pressed)]}
+                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-perfil', pressed)]}
                     onPress={() => {
                       setProfileMenuOpen(false);
                       navigation.navigate('Main', { screen: 'Profile' });
                     }}
+                    onHoverIn={onHoverIn('menu-perfil')}
+                    onHoverOut={onHoverOut('menu-perfil')}
                   >
                     <Text style={styles.profileMenuItemText}>Perfil</Text>
                   </Pressable>
                   <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, pressedStyle(pressed)]}
+                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-config', pressed)]}
                     onPress={() => {
                       setProfileMenuOpen(false);
                       navigation.navigate('Settings');
                     }}
+                    onHoverIn={onHoverIn('menu-config')}
+                    onHoverOut={onHoverOut('menu-config')}
                   >
                     <Text style={styles.profileMenuItemText}>Configurações</Text>
                   </Pressable>
                   <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, pressedStyle(pressed)]}
+                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-sair', pressed)]}
                     onPress={() => {
                       setProfileMenuOpen(false);
                       signOutUser();
                     }}
+                    onHoverIn={onHoverIn('menu-sair')}
+                    onHoverOut={onHoverOut('menu-sair')}
                   >
                     <Text style={[styles.profileMenuItemText, styles.profileMenuDanger]}>Sair</Text>
                   </Pressable>
@@ -182,7 +195,12 @@ export function DashboardScreen() {
                   <Text style={styles.heroQuoteAttribution}>— Provérbio luxemburguês</Text>
                 </>
               )}
-              <Pressable onPress={goToLearn}>
+              <Pressable
+                onPress={goToLearn}
+                onHoverIn={onHoverIn('heroButton')}
+                onHoverOut={onHoverOut('heroButton')}
+                style={({ pressed }) => liftStyle(hoveredId === 'heroButton', pressed)}
+              >
                 <LinearGradient
                   colors={[authColors.accentCyan, authColors.accentBlue]}
                   start={{ x: 0, y: 0 }}
@@ -204,7 +222,12 @@ export function DashboardScreen() {
             <View>
               <View style={styles.progressHeaderRow}>
                 <Text style={styles.progressTitle}>Seu progresso</Text>
-                <Pressable onPress={goToLearn}>
+                <Pressable
+                  onPress={goToLearn}
+                  onHoverIn={onHoverIn('verDetalhes')}
+                  onHoverOut={onHoverOut('verDetalhes')}
+                  style={({ pressed }) => liftStyle(hoveredId === 'verDetalhes', pressed)}
+                >
                   <Text style={styles.progressLink}>Ver detalhes →</Text>
                 </Pressable>
               </View>
@@ -245,7 +268,12 @@ export function DashboardScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Continue aprendendo</Text>
-            <Pressable onPress={goToLearn}>
+            <Pressable
+              onPress={goToLearn}
+              onHoverIn={onHoverIn('verTodos')}
+              onHoverOut={onHoverOut('verTodos')}
+              style={({ pressed }) => liftStyle(hoveredId === 'verTodos', pressed)}
+            >
               <Text style={styles.sectionLink}>Ver todos os módulos →</Text>
             </Pressable>
           </View>
@@ -258,7 +286,13 @@ export function DashboardScreen() {
                 <Pressable
                   key={m.id}
                   onPress={() => navigation.navigate('Objective', { unitId: m.id })}
-                  style={({ pressed }) => [styles.moduleCard, isActive && styles.moduleCardActive, pressedStyle(pressed)]}
+                  onHoverIn={onHoverIn(`module-${m.id}`)}
+                  onHoverOut={onHoverOut(`module-${m.id}`)}
+                  style={({ pressed }) => [
+                    styles.moduleCard,
+                    isActive && styles.moduleCardActive,
+                    liftStyle(hoveredId === `module-${m.id}`, pressed),
+                  ]}
                 >
                   <View style={[styles.moduleIconBadge, isActive && styles.moduleIconBadgeActive]}>
                     <Ionicons name={m.icon} size={24} color={isActive ? '#FFFFFF' : authColors.accentCyan} />
@@ -332,7 +366,13 @@ export function DashboardScreen() {
                 <Text style={styles.phraseLu}>"{phrase.lu}"</Text>
                 <Text style={styles.phrasePt}>{phrase.pt}</Text>
               </View>
-              <Pressable style={styles.phraseAudioButton} onPress={handlePlayPhrase} hitSlop={8}>
+              <Pressable
+                style={({ pressed }) => [styles.phraseAudioButton, liftStyle(hoveredId === 'audio', pressed)]}
+                onPress={handlePlayPhrase}
+                onHoverIn={onHoverIn('audio')}
+                onHoverOut={onHoverOut('audio')}
+                hitSlop={8}
+              >
                 <Ionicons name="volume-high" size={22} color="#FFFFFF" />
               </Pressable>
             </View>

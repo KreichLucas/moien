@@ -32,6 +32,24 @@ export const fontFamilies = {
   script: 'Caveat_600SemiBold',
 };
 
+/**
+ * Shared "hover lift" feedback for clickable cards/buttons on the premium
+ * (navy/cyan) screens: rises + gains a soft glow on hover, and stays lifted
+ * the whole time the cursor is over it — combined with the press-down scale
+ * in one object, since a second `transform` later in a style array replaces
+ * the first entirely rather than merging with it.
+ */
+export function liftStyle(isHovered: boolean, pressed = false) {
+  return {
+    transform: [{ translateY: isHovered ? -4 : 0 }, { scale: pressed ? 0.97 : 1 }],
+    shadowColor: authColors.accentCyan,
+    shadowOffset: { width: 0, height: isHovered ? 14 : 0 },
+    shadowOpacity: isHovered ? 0.4 : 0,
+    shadowRadius: isHovered ? 22 : 0,
+    elevation: isHovered ? 10 : 0,
+  } as const;
+}
+
 export function makeAuthStyles() {
   return StyleSheet.create({
     page: {

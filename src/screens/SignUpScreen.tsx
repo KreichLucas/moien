@@ -5,9 +5,8 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from 'react-native';
 import { AuthStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
-import { pressedStyle } from '../theme/theme';
 import { AuthLayout } from './AuthLayout';
-import { authColors, makeAuthStyles } from './authStyles';
+import { authColors, liftStyle, makeAuthStyles } from './authStyles';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
@@ -23,6 +22,11 @@ export function SignUpScreen({ navigation }: Props) {
   const [localError, setLocalError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+  const [eyeHovered, setEyeHovered] = useState(false);
+  const [confirmEyeHovered, setConfirmEyeHovered] = useState(false);
+  const [primaryHovered, setPrimaryHovered] = useState(false);
+  const [linkHovered, setLinkHovered] = useState(false);
+  const [googleHovered, setGoogleHovered] = useState(false);
 
   const handleSubmit = async () => {
     clearAuthError();
@@ -115,7 +119,13 @@ export function SignUpScreen({ navigation }: Props) {
             secureTextEntry={!showPassword}
             autoComplete="password-new"
           />
-          <Pressable onPress={() => setShowPassword((s) => !s)} hitSlop={8}>
+          <Pressable
+            onPress={() => setShowPassword((s) => !s)}
+            onHoverIn={() => setEyeHovered(true)}
+            onHoverOut={() => setEyeHovered(false)}
+            style={({ pressed }) => liftStyle(eyeHovered, pressed)}
+            hitSlop={8}
+          >
             <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={authColors.textSecondary} />
           </Pressable>
         </View>
@@ -131,14 +141,26 @@ export function SignUpScreen({ navigation }: Props) {
             secureTextEntry={!showConfirmPassword}
             autoComplete="password-new"
           />
-          <Pressable onPress={() => setShowConfirmPassword((s) => !s)} hitSlop={8}>
+          <Pressable
+            onPress={() => setShowConfirmPassword((s) => !s)}
+            onHoverIn={() => setConfirmEyeHovered(true)}
+            onHoverOut={() => setConfirmEyeHovered(false)}
+            style={({ pressed }) => liftStyle(confirmEyeHovered, pressed)}
+            hitSlop={8}
+          >
             <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={18} color={authColors.textSecondary} />
           </Pressable>
         </View>
 
         {errorText ? <Text style={styles.error}>{errorText}</Text> : null}
 
-        <Pressable onPress={handleSubmit} disabled={isDisabled} style={isDisabled && styles.buttonDisabled}>
+        <Pressable
+          onPress={handleSubmit}
+          disabled={isDisabled}
+          onHoverIn={() => setPrimaryHovered(true)}
+          onHoverOut={() => setPrimaryHovered(false)}
+          style={({ pressed }) => [!isDisabled && liftStyle(primaryHovered, pressed), isDisabled && styles.buttonDisabled]}
+        >
           <LinearGradient
             colors={[authColors.accentCyan, authColors.accentBlue]}
             start={{ x: 0, y: 0 }}
@@ -163,6 +185,9 @@ export function SignUpScreen({ navigation }: Props) {
               clearAuthError();
               navigation.navigate('Login');
             }}
+            onHoverIn={() => setLinkHovered(true)}
+            onHoverOut={() => setLinkHovered(false)}
+            style={({ pressed }) => liftStyle(linkHovered, pressed)}
           >
             <Text style={styles.linkText}>Entrar</Text>
           </Pressable>
@@ -175,8 +200,10 @@ export function SignUpScreen({ navigation }: Props) {
         </View>
 
         <Pressable
-          style={({ pressed }) => [styles.socialButton, pressedStyle(pressed), isGoogleSubmitting && styles.buttonDisabled]}
+          style={({ pressed }) => [styles.socialButton, liftStyle(googleHovered, pressed), isGoogleSubmitting && styles.buttonDisabled]}
           onPress={handleGoogleSignIn}
+          onHoverIn={() => setGoogleHovered(true)}
+          onHoverOut={() => setGoogleHovered(false)}
           disabled={isGoogleSubmitting}
         >
           {isGoogleSubmitting ? (

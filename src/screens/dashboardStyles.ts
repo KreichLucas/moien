@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
-import { authColors, fontFamilies } from './authStyles';
+import { authColors, fontFamilies, liftStyle } from './authStyles';
 
-export { authColors, fontFamilies };
+export { authColors, fontFamilies, liftStyle };
 
 export function makeDashboardStyles() {
   return StyleSheet.create({
