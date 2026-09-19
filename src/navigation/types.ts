@@ -1,5 +1,7 @@
+import { NavigatorScreenParams } from '@react-navigation/native';
+
 export type RootStackParamList = {
-  Main: undefined;
+  Main: NavigatorScreenParams<MainTabParamList> | undefined;
   Lesson: { lessonId: string };
   Result: { xpEarned: number; correctCount: number; totalCount: number };
   Streak: undefined;
@@ -7,6 +9,8 @@ export type RootStackParamList = {
   Objective: { unitId: string };
   OutOfDiamonds: { lessonId: string };
   DiamondRecovery: { lessonId: string };
+  Learn: undefined;
+  Achievements: undefined;
 };
 
 export type MainTabParamList = {
