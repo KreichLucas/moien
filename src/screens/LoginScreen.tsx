@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from 'react-native';
 import { AuthStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
+import { useHoverGuard } from '../utils/useHoverGuard';
 import { AuthLayout } from './AuthLayout';
 import { authColors, liftStyle, makeAuthStyles } from './authStyles';
 
@@ -22,6 +23,7 @@ export function LoginScreen({ navigation }: Props) {
   const [primaryHovered, setPrimaryHovered] = useState(false);
   const [linkHovered, setLinkHovered] = useState(false);
   const [googleHovered, setGoogleHovered] = useState(false);
+  const isHoverReady = useHoverGuard();
 
   const handleSubmit = async () => {
     clearAuthError();
@@ -86,7 +88,7 @@ export function LoginScreen({ navigation }: Props) {
           />
           <Pressable
             onPress={() => setShowPassword((s) => !s)}
-            onHoverIn={() => setEyeHovered(true)}
+            onHoverIn={() => isHoverReady() && setEyeHovered(true)}
             onHoverOut={() => setEyeHovered(false)}
             style={({ pressed }) => liftStyle(eyeHovered, pressed)}
             hitSlop={8}
@@ -100,7 +102,7 @@ export function LoginScreen({ navigation }: Props) {
         <Pressable
           onPress={handleSubmit}
           disabled={isDisabled}
-          onHoverIn={() => setPrimaryHovered(true)}
+          onHoverIn={() => isHoverReady() && setPrimaryHovered(true)}
           onHoverOut={() => setPrimaryHovered(false)}
           style={({ pressed }) => [!isDisabled && liftStyle(primaryHovered, pressed), isDisabled && styles.buttonDisabled]}
         >
@@ -128,7 +130,7 @@ export function LoginScreen({ navigation }: Props) {
               clearAuthError();
               navigation.navigate('SignUp');
             }}
-            onHoverIn={() => setLinkHovered(true)}
+            onHoverIn={() => isHoverReady() && setLinkHovered(true)}
             onHoverOut={() => setLinkHovered(false)}
             style={({ pressed }) => liftStyle(linkHovered, pressed)}
           >
@@ -145,7 +147,7 @@ export function LoginScreen({ navigation }: Props) {
         <Pressable
           style={({ pressed }) => [styles.socialButton, liftStyle(googleHovered, pressed), isGoogleSubmitting && styles.buttonDisabled]}
           onPress={handleGoogleSignIn}
-          onHoverIn={() => setGoogleHovered(true)}
+          onHoverIn={() => isHoverReady() && setGoogleHovered(true)}
           onHoverOut={() => setGoogleHovered(false)}
           disabled={isGoogleSubmitting}
         >

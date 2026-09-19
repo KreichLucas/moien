@@ -11,6 +11,7 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
 import { useProgress } from '../state/ProgressContext';
 import { CEFR_LEVELS } from '../types/content';
+import { useHoverGuard } from '../utils/useHoverGuard';
 import { authColors, liftStyle, makeDashboardStyles } from './dashboardStyles';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -41,7 +42,8 @@ export function DashboardScreen() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const onHoverIn = (id: string) => () => setHoveredId(id);
+  const isHoverReady = useHoverGuard();
+  const onHoverIn = (id: string) => () => isHoverReady() && setHoveredId(id);
   const onHoverOut = (id: string) => () => setHoveredId((current) => (current === id ? null : current));
 
   const levelProgress = getLevelProgress(units, progress.completedLessonIds);
