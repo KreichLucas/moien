@@ -38,15 +38,21 @@ export const fontFamilies = {
  * the whole time the cursor is over it — combined with the press-down scale
  * in one object, since a second `transform` later in a style array replaces
  * the first entirely rather than merging with it.
+ *
+ * Only `shadowOpacity` toggles — offset/radius stay fixed and small. A
+ * bigger blur (the original had 22px/14px) reads fine on one card alone,
+ * but bleeds into the gap of neighboring cards in a row (looking like a
+ * ghost outline) and turns into a big rectangular smear behind a wide
+ * button, so this stays tight and close to the element instead.
  */
 export function liftStyle(isHovered: boolean, pressed = false) {
   return {
-    transform: [{ translateY: isHovered ? -4 : 0 }, { scale: pressed ? 0.97 : 1 }],
+    transform: [{ translateY: isHovered ? -3 : 0 }, { scale: pressed ? 0.97 : 1 }],
     shadowColor: authColors.accentCyan,
-    shadowOffset: { width: 0, height: isHovered ? 14 : 0 },
-    shadowOpacity: isHovered ? 0.4 : 0,
-    shadowRadius: isHovered ? 22 : 0,
-    elevation: isHovered ? 10 : 0,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: isHovered ? 0.3 : 0,
+    shadowRadius: 8,
+    elevation: isHovered ? 6 : 0,
   } as const;
 }
 
