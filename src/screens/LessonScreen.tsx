@@ -72,17 +72,30 @@ export function LessonScreen({ route, navigation }: Props) {
   const attemptsRef = useRef<AttemptResult[]>(pending?.attempts ?? []);
   const missedCountRef = useRef<Record<string, number>>({});
   const microReviewedRef = useRef<Set<string>>(new Set());
+  // Wall-clock start of this screen — good enough for the "tempo da lição"
+  // stat on the result screen; a resumed pending lesson just starts the
+  // clock over rather than trying to reconstruct time already spent.
+  const startTimeRef = useRef(Date.now());
 
   const card = queue[currentIndex];
   const total = queue.length;
 
-  const finishLesson = (finalMistakes: number, sessionTotal: number) => {
+  const finishLesson = (finalMistakes: number, sessionTotal: number, remainingLives: number) => {
     const correctCount = sessionTotal - finalMistakes;
     const wasPerfect = finalMistakes === 0;
     const xpEarned = 10 + (wasPerfect ? 5 : 0);
     completeLesson(lessonId, xpEarned, wasPerfect, attemptsRef.current);
     playComplete();
-    navigation.replace('Result', { xpEarned, correctCount, totalCount: sessionTotal });
+    const elapsedSeconds = Math.round((Date.now() - startTimeRef.current) / 1000);
+    navigation.replace('Result', {
+      xpEarned,
+      correctCount,
+      totalCount: sessionTotal,
+      elapsedSeconds,
+      lives: remainingLives,
+      unitTitle: parentUnit?.title,
+      lessonTitle: lesson.title,
+    });
   };
 
   const handleExerciseComplete = (outcome: ExerciseOutcome) => {
@@ -164,7 +177,7 @@ export function LessonScreen({ route, navigation }: Props) {
     }
 
     if (isLastCard) {
-      finishLesson(newMistakes, newTotal);
+      finishLesson(newMistakes, newTotal, newLives);
       return;
     }
 
