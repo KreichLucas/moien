@@ -17,7 +17,6 @@ export type RootStackParamList = {
   OutOfDiamonds: { lessonId: string };
   DiamondRecovery: { lessonId: string };
   Learn: undefined;
-  Achievements: undefined;
   AllModules: undefined;
 };
 

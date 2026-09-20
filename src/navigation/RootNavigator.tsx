@@ -12,7 +12,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useFonts } from 'expo-font';
 import React, { useState } from 'react';
 import { ActivityIndicator, View, useColorScheme, useWindowDimensions } from 'react-native';
-import { AchievementsScreen } from '../screens/AchievementsScreen';
 import { AllModulesScreen } from '../screens/AllModulesScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { DiamondRecoveryScreen } from '../screens/DiamondRecoveryScreen';
@@ -70,13 +69,6 @@ function MainTabs({ navigation }: MainTabsProps) {
       label: 'Prática',
       active: activeTab === 'Practice',
       onPress: () => navigation.navigate('Main', { screen: 'Practice' }),
-    },
-    {
-      id: 'achievements',
-      icon: 'trophy',
-      label: 'Conquistas',
-      active: false,
-      onPress: () => navigation.navigate('Achievements'),
     },
     {
       id: 'profile',
@@ -177,7 +169,6 @@ export function RootNavigator() {
           <Stack.Screen name="OutOfDiamonds" component={OutOfDiamondsScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="DiamondRecovery" component={DiamondRecoveryScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="Learn" component={HomeScreen} />
-          <Stack.Screen name="Achievements" component={AchievementsScreen} />
           <Stack.Screen name="AllModules" component={AllModulesScreen} />
         </Stack.Navigator>
       ) : (
