@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
 import { useHoverGuard } from '../utils/useHoverGuard';
@@ -96,19 +96,8 @@ export function StreakScreen({ navigation }: Props) {
 
   return (
     <View style={styles.page}>
-      <ImageBackground
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        source={require('../../assets/WhatsApp Image 2026-09-19 at 21.25.06.jpeg')}
-        style={StyleSheet.absoluteFill}
-        resizeMode="cover"
-      >
-        <LinearGradient
-          colors={['rgba(4,11,24,0.58)', 'rgba(4,11,24,0.95)']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      </ImageBackground>
+      <View style={[styles.blob, styles.blobTop]} />
+      <View style={[styles.blob, styles.blobBottom]} />
 
       <View style={styles.stage} onLayout={onStageLayout}>
         <View onLayout={onNaturalLayout}>
@@ -135,25 +124,12 @@ export function StreakScreen({ navigation }: Props) {
             <View style={styles.mainRow}>
               <View style={styles.leftPanel}>
                 <View style={styles.badgeWrap}>
-                  <Ionicons name="sparkles" size={13} color="rgba(255,216,120,0.75)" style={styles.sparkleTL} />
-                  <Ionicons name="sparkles" size={16} color="rgba(255,216,120,0.6)" style={styles.sparkleTR} />
-                  <Ionicons name="sparkles" size={11} color="rgba(255,216,120,0.6)" style={styles.sparkleBL} />
-                  <Ionicons name="sparkles" size={14} color="rgba(255,216,120,0.55)" style={styles.sparkleBR} />
-
-                  <View style={styles.topFlameWrap}>
-                    <Ionicons name="flame" size={54} color="#FF8A3D" />
-                    <Ionicons name="flame" size={30} color="#FFD65A" style={styles.topFlameCore} />
-                  </View>
-
-                  <View style={styles.badgeRow}>
-                    <Ionicons name="leaf" size={38} color="#E8C158" style={styles.laurelLeft} />
-                    <View style={styles.shieldOuter}>
-                      <View style={styles.shieldInner}>
-                        <Ionicons name="flame" size={68} color="#FFFFFF" />
-                      </View>
-                    </View>
-                    <Ionicons name="leaf" size={38} color="#E8C158" style={styles.laurelRight} />
-                  </View>
+                  <Image
+                    // eslint-disable-next-line @typescript-eslint/no-require-imports
+                    source={require('../../assets/streak-badge.png')}
+                    style={styles.badgeImage}
+                    resizeMode="contain"
+                  />
                 </View>
 
                 <Text style={styles.ofensivaLabel}>Ofensiva</Text>
@@ -279,6 +255,9 @@ export function StreakScreen({ navigation }: Props) {
 function makeStyles() {
   return StyleSheet.create({
     page: { flex: 1, minHeight: '100%', backgroundColor: authColors.pageBg, overflow: 'hidden' },
+    blob: { position: 'absolute', borderRadius: 9999, opacity: 0.3 },
+    blobTop: { width: 560, height: 560, top: -220, left: -180, backgroundColor: authColors.blobBlue },
+    blobBottom: { width: 620, height: 620, bottom: -260, right: -200, backgroundColor: authColors.blobCyan },
     stage: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
     canvas: { width: NATURAL_WIDTH, paddingHorizontal: 48, paddingVertical: 36 },
@@ -312,40 +291,10 @@ function makeStyles() {
     leftPanel: { width: LEFT_PANEL_WIDTH, alignItems: 'center' },
 
     badgeWrap: { alignItems: 'center', marginBottom: 6 },
-    sparkleTL: { position: 'absolute', top: 6, left: 30 },
-    sparkleTR: { position: 'absolute', top: -2, right: 24 },
-    sparkleBL: { position: 'absolute', bottom: 30, left: 6 },
-    sparkleBR: { position: 'absolute', bottom: 46, right: 10 },
-
-    topFlameWrap: { alignItems: 'center', justifyContent: 'center', marginBottom: -14, zIndex: 2 },
-    topFlameCore: { position: 'absolute', top: 12 },
-
-    badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    laurelLeft: { transform: [{ rotate: '-20deg' }] },
-    laurelRight: { transform: [{ scaleX: -1 }, { rotate: '-20deg' }] },
-    shieldOuter: {
-      width: 152,
-      height: 168,
-      backgroundColor: '#E8C158',
-      alignItems: 'center',
-      justifyContent: 'center',
-      // @ts-expect-error web-only CSS property, valid on this web-only build
-      clipPath: 'polygon(0% 0%, 100% 0%, 100% 62%, 50% 100%, 0% 62%)',
-      shadowColor: '#F0C94A',
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.7,
-      shadowRadius: 28,
-      elevation: 10,
-    },
-    shieldInner: {
-      width: 134,
-      height: 150,
-      alignItems: 'center',
-      justifyContent: 'center',
-      overflow: 'hidden',
-      backgroundColor: '#F0C94A',
-      clipPath: 'polygon(0% 0%, 100% 0%, 100% 62%, 50% 100%, 0% 62%)',
-    },
+    // Natural asset ratio is 1279x1230 — fixed width, height derived so it
+    // never stretches. `streak-badge.png` is a real transparent cutout
+    // (see the chroma-key note above `require`), not the raw JPEG.
+    badgeImage: { width: 260, height: 260 * (1230 / 1279) },
 
     ofensivaLabel: { fontFamily: fontFamilies.displaySemiBold, fontSize: 16, color: authColors.textSecondary, marginTop: 6 },
     streakNumber: { fontFamily: fontFamilies.displayExtraBold, fontSize: 76, color: authColors.textPrimary, lineHeight: 84 },
