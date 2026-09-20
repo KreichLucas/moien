@@ -155,7 +155,12 @@ function makeStyles(colors: ThemeColors) {
     container: { flex: 1, padding: 20 },
     instruction: { fontSize: 14, color: colors.textSecondary, marginBottom: 4 },
     translation: { fontSize: 14, color: colors.textSecondary, marginBottom: 20, fontStyle: 'italic' },
-    sentenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 },
+    // `flex-end` (not `center`) on purpose: before a word is picked, the
+    // blank's own box is only as tall as its border (no text inside yet),
+    // so centering it against the much taller surrounding words left it
+    // floating disconnected below them instead of sitting on their
+    // baseline like a real blank in a sentence should.
+    sentenceRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 12 },
     sentence: { fontSize: 22, fontWeight: '700', color: colors.text },
     wordHintBox: {
       backgroundColor: colors.surface,
