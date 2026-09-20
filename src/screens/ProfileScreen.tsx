@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo, useState } from 'react';
-import { Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, StyleSheet } from 'react-native';
+import React, { useMemo, useRef, useState } from 'react';
+import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, StyleSheet } from 'react-native';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { PhotoConsentModal } from '../components/PhotoConsentModal';
 import { UserAvatar } from '../components/UserAvatar';
@@ -46,35 +46,62 @@ function speak(text: string) {
   }
 }
 
-/** Small "pick one from a list" pill — same absolute-dropdown interaction already used for the profile menu on the Dashboard. */
+/**
+ * Small "pick one from a list" pill. Renders its open menu through a
+ * `Modal` (same top-layer pattern already used by PhotoConsentModal/
+ * ChangePasswordModal) instead of a plain absolutely-positioned sibling
+ * View — the previous version sat inside the same stacking context as the
+ * vocabulary table's horizontal ScrollView, which on web ended up painting
+ * table rows through the menu's background instead of reliably behind it,
+ * no matter how high its zIndex was set. A Modal always paints in its own
+ * top-level layer, so this guarantees the menu is opaque and above
+ * everything, while looking pixel-identical (same dropdownMenu/Item
+ * styles) — just positioned via the button's real on-screen coordinates
+ * instead of a CSS-relative offset.
+ */
 function Dropdown({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
   const [open, setOpen] = useState(false);
+  const [menuLayout, setMenuLayout] = useState({ x: 0, y: 0, width: 0 });
+  const buttonRef = useRef<View>(null);
+
+  const openMenu = () => {
+    buttonRef.current?.measureInWindow((x, y, width, height) => {
+      setMenuLayout({ x, y: y + height + 6, width });
+      setOpen(true);
+    });
+  };
+
   return (
     <View style={styles.dropdownWrap}>
-      <Pressable style={styles.dropdownButton} onPress={() => setOpen((o) => !o)}>
+      <Pressable ref={buttonRef} style={styles.dropdownButton} onPress={openMenu}>
         <Text style={styles.dropdownButtonText} numberOfLines={1}>
           {value}
         </Text>
         <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={authColors.textSecondary} />
       </Pressable>
-      {open && (
-        <View style={styles.dropdownMenu}>
-          <ScrollView style={styles.dropdownMenuScroll}>
-            {options.map((opt) => (
-              <Pressable
-                key={opt}
-                style={styles.dropdownMenuItem}
-                onPress={() => {
-                  onChange(opt);
-                  setOpen(false);
-                }}
-              >
-                <Text style={[styles.dropdownMenuItemText, opt === value && styles.dropdownMenuItemTextActive]}>{opt}</Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      <Modal visible={open} transparent animationType="none" onRequestClose={() => setOpen(false)}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)}>
+          <Pressable
+            style={[styles.dropdownMenu, { top: menuLayout.y, left: menuLayout.x, minWidth: Math.max(menuLayout.width, 150) }]}
+            onPress={() => {}}
+          >
+            <ScrollView style={styles.dropdownMenuScroll}>
+              {options.map((opt) => (
+                <Pressable
+                  key={opt}
+                  style={styles.dropdownMenuItem}
+                  onPress={() => {
+                    onChange(opt);
+                    setOpen(false);
+                  }}
+                >
+                  <Text style={[styles.dropdownMenuItemText, opt === value && styles.dropdownMenuItemTextActive]}>{opt}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -562,10 +589,9 @@ const styles = StyleSheet.create({
   },
   dropdownButtonText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12.5, color: authColors.textPrimary, flexShrink: 1 },
   dropdownMenu: {
+    // top/left/minWidth are set inline per instance (see Dropdown), from
+    // the trigger button's real measured position inside the Modal layer.
     position: 'absolute',
-    top: 46,
-    left: 0,
-    minWidth: 180,
     maxHeight: 220,
     backgroundColor: authColors.pageBgTop,
     borderWidth: 1,
