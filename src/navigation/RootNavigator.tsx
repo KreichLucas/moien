@@ -13,6 +13,7 @@ import { useFonts } from 'expo-font';
 import React, { useState } from 'react';
 import { ActivityIndicator, View, useColorScheme, useWindowDimensions } from 'react-native';
 import { AchievementsScreen } from '../screens/AchievementsScreen';
+import { AllModulesScreen } from '../screens/AllModulesScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { DiamondRecoveryScreen } from '../screens/DiamondRecoveryScreen';
 import { HomeScreen } from '../screens/HomeScreen';
@@ -177,6 +178,7 @@ export function RootNavigator() {
           <Stack.Screen name="DiamondRecovery" component={DiamondRecoveryScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="Learn" component={HomeScreen} />
           <Stack.Screen name="Achievements" component={AchievementsScreen} />
+          <Stack.Screen name="AllModules" component={AllModulesScreen} />
         </Stack.Navigator>
       ) : (
         <AuthStack.Navigator screenOptions={{ headerShown: false }}>

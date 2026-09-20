@@ -273,7 +273,7 @@ export function DashboardScreen() {
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Continue aprendendo</Text>
             <Pressable
-              onPress={goToLearn}
+              onPress={() => navigation.navigate('AllModules')}
               onHoverIn={onHoverIn('verTodos')}
               onHoverOut={onHoverOut('verTodos')}
               style={({ pressed }) => liftStyle(hoveredId === 'verTodos', 8, pressed)}
