@@ -48,7 +48,7 @@ describe('tierOf', () => {
 
 describe('validateProgression — word readiness (words never taught standalone stay ungated)', () => {
   function unit(lessons: Unit['lessons']): Unit {
-    return { id: 'u', title: 't', description: '', level: 'A1', lessons };
+    return { id: 'u', title: 't', description: '', level: 'A1-INICIANTE', lessons };
   }
 
   it('a produce-tier single word with zero prior exposure is flagged', () => {
@@ -221,7 +221,7 @@ describe('validateProgression — word readiness (words never taught standalone 
   });
 
   it('the real A1 content (Saudações) has zero progression violations', () => {
-    const a1 = units.filter((u) => u.level === 'A1');
+    const a1 = units.filter((u) => u.level === 'A1-INICIANTE');
     const saudacoes = a1.filter((u) => u.id === 'a1-obj1');
     const violations = validateProgression(saudacoes);
     assert.deepEqual(violations, [], `Unexpected violations: ${JSON.stringify(violations, null, 2)}`);

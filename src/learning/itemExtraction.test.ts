@@ -9,7 +9,7 @@ const FIXTURE_UNITS: Unit[] = [
     id: 'f1',
     title: 'Fixture',
     description: '',
-    level: 'A1',
+    level: 'A1-INICIANTE',
     lessons: [
       {
         id: 'f1-l1',

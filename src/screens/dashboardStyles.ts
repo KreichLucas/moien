@@ -330,7 +330,12 @@ export function makeDashboardStyles() {
       justifyContent: 'center',
     },
     progressLevelBadgeText: { fontFamily: fontFamilies.displayExtraBold, fontSize: 19, color: authColors.accentCyan },
-    progressLevelLabel: { fontFamily: fontFamilies.displaySemiBold, fontSize: 15, color: authColors.textSecondary },
+    // Badge holds just the CEFR group code (A1/A2/B1/B2 — always fits); the
+    // specific stage (Iniciante/Intermediário/Avançado) goes here instead,
+    // so "which of the 10 levels" reads clearly without cramming the whole
+    // "A1 · Iniciante" label into a 60px square.
+    progressLevelStage: { fontFamily: fontFamilies.displayBold, fontSize: 16, color: authColors.textPrimary },
+    progressLevelLabel: { fontFamily: fontFamilies.displayRegular, fontSize: 12.5, color: authColors.textSecondary, marginTop: 1 },
     progressBarTrack: {
       height: 14,
       borderRadius: 7,
@@ -340,6 +345,7 @@ export function makeDashboardStyles() {
     },
     progressBarFill: { height: '100%', borderRadius: 7, backgroundColor: authColors.accentCyan },
     progressBarLabel: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: authColors.textSecondary, marginTop: 12 },
+    progressNextLevel: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12.5, color: authColors.accentCyan, marginTop: 8 },
     progressQuoteBox: {
       marginTop: 32,
       paddingTop: 20,

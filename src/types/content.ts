@@ -72,7 +72,25 @@ export interface Lesson {
   exercises: Exercise[];
 }
 
-export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2'] as const;
+/**
+ * The official 10-stage level structure: each CEFR band (A1/A2/B1/B2) split
+ * into Iniciante/Intermediário/Avançado stages, except B2 which — matching
+ * how far real content actually goes today — only has an Iniciante stage
+ * defined. Order here IS the course progression order everywhere it's
+ * consumed (journey view, "next level" logic, review-lesson lookback).
+ */
+export const CEFR_LEVELS = [
+  'A1-INICIANTE',
+  'A1-INTERMEDIARIO',
+  'A1-AVANCADO',
+  'A2-INICIANTE',
+  'A2-INTERMEDIARIO',
+  'A2-AVANCADO',
+  'B1-INICIANTE',
+  'B1-INTERMEDIARIO',
+  'B1-AVANCADO',
+  'B2-INICIANTE',
+] as const;
 export type CEFRLevel = (typeof CEFR_LEVELS)[number];
 
 export interface Unit {

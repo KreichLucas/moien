@@ -67,8 +67,8 @@ export function HomeScreen() {
       <View style={styles.levelCard}>
         <Text style={styles.levelCardTitle}>
           {levelProgress.isMaxLevel
-            ? `Nível ${levelProgress.level} concluído! 🏆`
-            : `Rumo ao nível ${levelProgress.level}`}
+            ? `Nível ${LEVEL_LABELS[levelProgress.level]} concluído! 🏆`
+            : `Rumo ao nível ${LEVEL_LABELS[levelProgress.level]}`}
         </Text>
         <View style={styles.levelTrack}>
           <Animated.View

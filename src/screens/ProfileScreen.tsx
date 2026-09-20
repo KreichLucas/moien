@@ -6,7 +6,7 @@ import { Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimens
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { PhotoConsentModal } from '../components/PhotoConsentModal';
 import { UserAvatar } from '../components/UserAvatar';
-import { getLevelProgress } from '../content/levels';
+import { LEVEL_LABELS, getLevelProgress } from '../content/levels';
 import { units } from '../content/units';
 import { computeCourseMetrics } from '../learning/metrics';
 import { ITEM_REGISTRY } from '../learning/registry';
@@ -145,13 +145,17 @@ export function ProfileScreen() {
         const item = ITEM_REGISTRY.items[itemId];
         if (!item || item.kind !== 'word') return null;
         const unit = units.find((u) => u.id === item.firstSeenUnitId);
+        const level = unit?.level ?? levelProgress.level;
         return {
           id: itemId,
           lu: item.displayLu,
           pt: item.displayPt,
           moduleTitle: unit?.title ?? '—',
           moduleColorIndex: unit ? (unitIndexById.get(unit.id) ?? 0) % MODULE_PILL_COLORS.length : 0,
-          level: unit?.level ?? levelProgress.level,
+          level,
+          // Full "A1 · Iniciante" for the filter dropdown; the narrow table
+          // column below shows just the short group code from this.
+          levelLabel: LEVEL_LABELS[level],
           lastSeenAt: mastery.lastSeenAt,
           isMastered: mastery.domainLevel >= 4,
         };
@@ -160,7 +164,7 @@ export function ProfileScreen() {
   }, [progress.itemMastery, unitIndexById, levelProgress.level]);
 
   const levelOptions = useMemo(
-    () => [ALL_LEVELS, ...Array.from(new Set(vocabRows.map((r) => r.level))).sort()],
+    () => [ALL_LEVELS, ...Array.from(new Set(vocabRows.map((r) => r.levelLabel)))],
     [vocabRows]
   );
   const moduleOptions = useMemo(
@@ -170,7 +174,7 @@ export function ProfileScreen() {
 
   const visibleRows = useMemo(() => {
     let rows = vocabRows;
-    if (levelFilter !== ALL_LEVELS) rows = rows.filter((r) => r.level === levelFilter);
+    if (levelFilter !== ALL_LEVELS) rows = rows.filter((r) => r.levelLabel === levelFilter);
     if (moduleFilter !== ALL_MODULES) rows = rows.filter((r) => r.moduleTitle === moduleFilter);
     const q = searchQuery.trim().toLowerCase();
     if (q) rows = rows.filter((r) => r.lu.toLowerCase().includes(q) || r.pt.toLowerCase().includes(q));
@@ -272,7 +276,7 @@ export function ProfileScreen() {
           <StatCard icon="star" color="#FFD65A" value={progress.xp} label="XP total" />
           <StatCard icon="flame" color="#FF8A3D" value={progress.streak} label="Dias de ofensiva" />
           <StatCard icon="book" color={authColors.accentCyan} value={`${progress.completedLessonIds.length} / ${totalLessons}`} label="Lições completas" />
-          <StatCard icon="stats-chart" color="#22C55E" value={levelProgress.level} label="Nível atual" />
+          <StatCard icon="stats-chart" color="#22C55E" value={LEVEL_LABELS[levelProgress.level]} label="Nível atual" />
         </View>
 
         <Text style={styles.sectionTitle}>Domínio do idioma</Text>
@@ -351,7 +355,7 @@ export function ProfileScreen() {
                         </View>
                       </View>
                       <Text style={[styles.cellText, styles.colDate]}>{formatDate(row.lastSeenAt)}</Text>
-                      <Text style={[styles.cellText, styles.colLevel]}>{row.level}</Text>
+                      <Text style={[styles.cellText, styles.colLevel]}>{row.level.split('-')[0]}</Text>
                       <View style={styles.colStatus}>
                         {row.isMastered ? (
                           <View style={styles.statusRow}>

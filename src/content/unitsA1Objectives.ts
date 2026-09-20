@@ -12,7 +12,7 @@ export const a1Objectives: Unit[] = [
     id: 'a1-obj1',
     title: 'Saudações',
     description: 'Cumprimentar, se despedir e ser gentil em luxemburguês',
-    level: 'A1',
+    level: 'A1-INICIANTE',
     kind: 'objective',
     icon: '👋',
     lessons: [
@@ -142,7 +142,7 @@ export const a1Objectives: Unit[] = [
     id: 'a1-obj2',
     title: 'Eu e Você',
     description: 'Falar seu nome, idade, origem e onde você mora',
-    level: 'A1',
+    level: 'A1-INICIANTE',
     kind: 'objective',
     icon: '🙋',
     lessons: [
@@ -247,7 +247,7 @@ export const a1Objectives: Unit[] = [
     id: 'a1-obj3',
     title: 'Números',
     description: 'Contar de 0 a 100 e usar números no dia a dia',
-    level: 'A1',
+    level: 'A1-INICIANTE',
     kind: 'objective',
     icon: '🔢',
     lessons: [
@@ -352,7 +352,7 @@ export const a1Objectives: Unit[] = [
     id: 'a1-obj4',
     title: 'Cores e Formas',
     description: 'Descrever objetos por cor, tamanho e forma',
-    level: 'A1',
+    level: 'A1-INICIANTE',
     kind: 'objective',
     icon: '🎨',
     lessons: [

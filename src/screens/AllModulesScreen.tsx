@@ -4,28 +4,22 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { UserAvatar } from '../components/UserAvatar';
+import { LEVEL_LABELS, splitLevelLabel } from '../content/levels';
 import { ModuleCatalogEntry, MODULE_CATALOG_A1 } from '../content/moduleCatalogA1';
 import { getNextLessonForUnit } from '../content/path';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
 import { useProgress } from '../state/ProgressContext';
+import { CEFRLevel, CEFR_LEVELS } from '../types/content';
 import { authColors, fontFamilies, liftStyle } from './authStyles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'AllModules'>;
 
-type LevelTabId = 'A1' | 'A1+' | 'A2' | 'A2+' | 'B1' | 'B1+';
-
 const GRID_GAP = 16;
 
-const LEVEL_TABS: { id: LevelTabId; label: string }[] = [
-  { id: 'A1', label: 'A1' },
-  { id: 'A1+', label: 'A1 Avançado' },
-  { id: 'A2', label: 'A2' },
-  { id: 'A2+', label: 'A2 Avançado' },
-  { id: 'B1', label: 'B1' },
-  { id: 'B1+', label: 'B1 Avançado' },
-];
+/** A1-INICIANTE is the only level with its own hand-authored 20-module catalog (below) — every other level's tab is built straight from real `Unit` data at that level, so no level is ever hardcoded away. */
+const CATALOG_LEVEL: CEFRLevel = 'A1-INICIANTE';
 
 export function AllModulesScreen({ navigation }: Props) {
   const { user, signOutUser } = useAuth();
@@ -42,7 +36,7 @@ export function AllModulesScreen({ navigation }: Props) {
   const gridColumns = width >= 1300 ? 4 : width >= 1000 ? 3 : width >= 680 ? 2 : 1;
   const gridContentWidth = Math.min(width, 1600) - 28 * 2;
   const cardWidth = (gridContentWidth - GRID_GAP * (gridColumns - 1)) / gridColumns;
-  const [activeTab, setActiveTab] = useState<LevelTabId>('A1');
+  const [activeTab, setActiveTab] = useState<CEFRLevel>(CATALOG_LEVEL);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
@@ -65,6 +59,25 @@ export function AllModulesScreen({ navigation }: Props) {
   const completedModuleCount = moduleStats.filter((m) => m.isComplete).length;
   const totalModuleCount = MODULE_CATALOG_A1.length;
   const levelPct = Math.round((completedModuleCount / totalModuleCount) * 100);
+
+  // Every level other than CATALOG_LEVEL has no hand-authored catalog entry
+  // (order/icon) — built straight from real `Unit` data at that level
+  // instead, so a level with real content (today: A2/B1/B2's "Iniciante"
+  // stage) shows its real modules rather than a permanent "Em breve".
+  const realLevelStats = useMemo(() => {
+    return units
+      .filter((u) => u.level === activeTab)
+      .map((unit, i) => {
+        const completedLessons = unit.lessons.filter((l) => progress.completedLessonIds.includes(l.id)).length;
+        const totalLessons = unit.lessons.length;
+        const entry: ModuleCatalogEntry = { order: i + 1, title: unit.title, icon: 'book' };
+        return { entry, unit, completedLessons, totalLessons, isComplete: totalLessons > 0 && completedLessons === totalLessons };
+      });
+  }, [activeTab, progress.completedLessonIds]);
+  const realCompletedModuleCount = realLevelStats.filter((m) => m.isComplete).length;
+  const realTotalModuleCount = realLevelStats.length;
+  const realLevelPct = realTotalModuleCount > 0 ? Math.round((realCompletedModuleCount / realTotalModuleCount) * 100) : 0;
+  const [activeTabCode, activeTabStage] = splitLevelLabel(activeTab);
 
   const handleModulePress = (unit: (typeof units)[number]) => {
     const lesson = getNextLessonForUnit(unit, progress.completedLessonIds);
@@ -161,15 +174,15 @@ export function AllModulesScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.levelTabBar}>
-          {LEVEL_TABS.map((tab) => {
-            const isActive = tab.id === activeTab;
+          {CEFR_LEVELS.map((level) => {
+            const isActive = level === activeTab;
             return (
               <Pressable
-                key={tab.id}
-                onPress={() => setActiveTab(tab.id)}
-                onHoverIn={() => setHoveredId(`tab-${tab.id}`)}
-                onHoverOut={() => setHoveredId((id) => (id === `tab-${tab.id}` ? null : id))}
-                style={({ pressed }) => [liftStyle(hoveredId === `tab-${tab.id}` && !isActive, 999, pressed)]}
+                key={level}
+                onPress={() => setActiveTab(level)}
+                onHoverIn={() => setHoveredId(`tab-${level}`)}
+                onHoverOut={() => setHoveredId((id) => (id === `tab-${level}` ? null : id))}
+                style={({ pressed }) => [liftStyle(hoveredId === `tab-${level}` && !isActive, 999, pressed)]}
               >
                 {isActive ? (
                   <LinearGradient
@@ -178,11 +191,11 @@ export function AllModulesScreen({ navigation }: Props) {
                     end={{ x: 1, y: 0 }}
                     style={styles.levelTab}
                   >
-                    <Text style={styles.levelTabTextActive}>{tab.label}</Text>
+                    <Text style={styles.levelTabTextActive}>{LEVEL_LABELS[level]}</Text>
                   </LinearGradient>
                 ) : (
                   <View style={styles.levelTab}>
-                    <Text style={styles.levelTabText}>{tab.label}</Text>
+                    <Text style={styles.levelTabText}>{LEVEL_LABELS[level]}</Text>
                   </View>
                 )}
               </Pressable>
@@ -190,7 +203,7 @@ export function AllModulesScreen({ navigation }: Props) {
           })}
         </View>
 
-        {activeTab === 'A1' ? (
+        {activeTab === CATALOG_LEVEL ? (
           <View style={styles.section}>
             <View style={[styles.sectionHeaderRow, isNarrow && styles.sectionHeaderRowNarrow]}>
               <View style={styles.sectionHeaderText}>
@@ -228,11 +241,51 @@ export function AllModulesScreen({ navigation }: Props) {
               ))}
             </View>
           </View>
+        ) : realLevelStats.length > 0 ? (
+          <View style={styles.section}>
+            <View style={[styles.sectionHeaderRow, isNarrow && styles.sectionHeaderRowNarrow]}>
+              <View style={styles.sectionHeaderText}>
+                <Text style={styles.sectionTitle}>
+                  {activeTabCode} - {activeTabStage}
+                </Text>
+                <Text style={styles.sectionSubtitle}>Continue avançando no seu aprendizado de luxemburguês.</Text>
+              </View>
+              <View style={styles.sectionProgressBlock}>
+                <Text style={styles.sectionProgressLabel}>
+                  {realCompletedModuleCount} de {realTotalModuleCount} módulos concluídos
+                </Text>
+                <View style={styles.sectionProgressRow}>
+                  <View style={styles.sectionProgressTrack}>
+                    <View style={[styles.sectionProgressFill, { width: `${realLevelPct}%` }]} />
+                  </View>
+                  <Text style={styles.sectionProgressPct}>{realLevelPct}%</Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={styles.grid}>
+              {realLevelStats.map(({ entry, unit, completedLessons, totalLessons, isComplete }) => (
+                <ModuleCard
+                  key={unit.id}
+                  entry={entry}
+                  completedLessons={completedLessons}
+                  totalLessons={totalLessons}
+                  isComplete={isComplete}
+                  isHovered={hoveredId === `module-${unit.id}`}
+                  onHoverIn={() => setHoveredId(`module-${unit.id}`)}
+                  onHoverOut={() => setHoveredId((id) => (id === `module-${unit.id}` ? null : id))}
+                  onPress={() => handleModulePress(unit)}
+                  styles={styles}
+                  cardWidth={cardWidth}
+                />
+              ))}
+            </View>
+          </View>
         ) : (
           <View style={styles.emptySection}>
             <Ionicons name="hourglass-outline" size={32} color={authColors.textSecondary} />
             <Text style={styles.emptyTitle}>Em breve!</Text>
-            <Text style={styles.emptySubtitle}>Novos módulos chegando em breve para {LEVEL_TABS.find((t) => t.id === activeTab)?.label}.</Text>
+            <Text style={styles.emptySubtitle}>Novos módulos chegando em breve para {LEVEL_LABELS[activeTab]}.</Text>
           </View>
         )}
         </View>

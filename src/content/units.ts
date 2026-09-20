@@ -7,7 +7,7 @@ export const units: Unit[] = [
     id: 'u3',
     title: 'Família e Dia a Dia',
     description: 'Vocabulário de família e do cotidiano',
-    level: 'A1',
+    level: 'A1-INICIANTE',
     lessons: [
       {
         id: 'u3-l1',
@@ -55,7 +55,7 @@ export const units: Unit[] = [
     id: 'u4',
     title: 'Comida e Bebida',
     description: 'Vocabulário essencial para comer e beber',
-    level: 'A1',
+    level: 'A1-INICIANTE',
     lessons: [
       {
         id: 'u4-l1',
@@ -103,7 +103,7 @@ export const units: Unit[] = [
     id: 'u5',
     title: 'Compras',
     description: 'Comprar, pagar e negociar preços',
-    level: 'A2',
+    level: 'A2-INICIANTE',
     lessons: [
       {
         id: 'u5-l1',
@@ -151,7 +151,7 @@ export const units: Unit[] = [
     id: 'u6',
     title: 'Viagens',
     description: 'Se locomover e viajar em luxemburguês',
-    level: 'A2',
+    level: 'A2-INICIANTE',
     lessons: [
       {
         id: 'u6-l1',
@@ -197,7 +197,7 @@ export const units: Unit[] = [
     id: 'u12',
     title: 'Escola e Estudos',
     description: 'Vocabulário do ambiente escolar e universitário',
-    level: 'A2',
+    level: 'A2-INICIANTE',
     lessons: [
       {
         id: 'u12-l1',
@@ -243,7 +243,7 @@ export const units: Unit[] = [
     id: 'u13',
     title: 'Clima e Estações',
     description: 'Falar sobre o tempo e as estações do ano',
-    level: 'A2',
+    level: 'A2-INICIANTE',
     lessons: [
       {
         id: 'u13-l1',
@@ -289,7 +289,7 @@ export const units: Unit[] = [
     id: 'u7',
     title: 'Trabalho',
     description: 'Vocabulário do ambiente profissional',
-    level: 'B1',
+    level: 'B1-INICIANTE',
     lessons: [
       {
         id: 'u7-l1',
@@ -335,7 +335,7 @@ export const units: Unit[] = [
     id: 'u8',
     title: 'Saúde',
     description: 'Falar sobre corpo, sintomas e bem-estar',
-    level: 'B1',
+    level: 'B1-INICIANTE',
     lessons: [
       {
         id: 'u8-l1',
@@ -381,7 +381,7 @@ export const units: Unit[] = [
     id: 'u14',
     title: 'Casa e Moradia',
     description: 'Vocabulário sobre casa, cômodos e alugar um imóvel',
-    level: 'B1',
+    level: 'B1-INICIANTE',
     lessons: [
       {
         id: 'u14-l1',
@@ -427,7 +427,7 @@ export const units: Unit[] = [
     id: 'u15',
     title: 'Esportes e Lazer',
     description: 'Vocabulário de esportes, jogos e competições',
-    level: 'B1',
+    level: 'B1-INICIANTE',
     lessons: [
       {
         id: 'u15-l1',
@@ -473,7 +473,7 @@ export const units: Unit[] = [
     id: 'u9',
     title: 'Opiniões e Sentimentos',
     description: 'Expressar opiniões, concordar e discordar',
-    level: 'B2',
+    level: 'B2-INICIANTE',
     lessons: [
       {
         id: 'u9-l1',
@@ -519,7 +519,7 @@ export const units: Unit[] = [
     id: 'u16',
     title: 'Tecnologia e Internet',
     description: 'Vocabulário do mundo digital',
-    level: 'B2',
+    level: 'B2-INICIANTE',
     lessons: [
       {
         id: 'u16-l1',
@@ -565,7 +565,7 @@ export const units: Unit[] = [
     id: 'u17',
     title: 'Relacionamentos',
     description: 'Falar sobre amizade, amor e família formada',
-    level: 'B2',
+    level: 'B2-INICIANTE',
     lessons: [
       {
         id: 'u17-l1',
@@ -611,7 +611,7 @@ export const units: Unit[] = [
     id: 'u22',
     title: 'Meio Ambiente',
     description: 'Vocabulário sobre natureza e sustentabilidade',
-    level: 'B2',
+    level: 'B2-INICIANTE',
     lessons: [
       {
         id: 'u22-l1',

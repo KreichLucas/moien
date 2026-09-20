@@ -6,7 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { ImageBackground, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { UserAvatar } from '../components/UserAvatar';
 import { getPhraseOfTheDay } from '../content/dailyPhrases';
-import { LEVEL_LABELS, getLevelProgress } from '../content/levels';
+import { LEVEL_LABELS, getLevelProgress, nextLevel, splitLevelLabel } from '../content/levels';
 import { getNextLessonForUnit } from '../content/path';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
@@ -51,6 +51,8 @@ export function DashboardScreen() {
   const levelProgress = getLevelProgress(units, progress.completedLessonIds);
   const levelPct =
     levelProgress.total > 0 ? Math.min(100, Math.round((levelProgress.completed / levelProgress.total) * 100)) : 0;
+  const [levelGroupCode, levelStageName] = splitLevelLabel(levelProgress.level);
+  const levelAhead = nextLevel(levelProgress.level);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuário';
   const initials = (displayName.match(/\S+/g) ?? [])
@@ -58,7 +60,7 @@ export function DashboardScreen() {
     .map((s) => s[0]?.toUpperCase())
     .join('') || 'U';
 
-  const a1Units = useMemo(() => units.filter((u) => u.level === 'A1'), []);
+  const a1Units = useMemo(() => units.filter((u) => u.level === 'A1-INICIANTE'), []);
   const modules = useMemo(
     () =>
       a1Units.map((u) => {
@@ -188,7 +190,7 @@ export function DashboardScreen() {
             />
             <View style={[styles.heroContent, isNarrow && styles.heroContentNarrow]}>
               <View style={styles.heroTag}>
-                <Text style={styles.heroTagText}>{levelProgress.level} · Nível atual</Text>
+                <Text style={styles.heroTagText}>{LEVEL_LABELS[levelProgress.level]}</Text>
               </View>
               <Text style={[styles.heroTitle, isNarrow && styles.heroTitleNarrow]} numberOfLines={2}>
                 Olá, {displayName}! 👋
@@ -244,9 +246,12 @@ export function DashboardScreen() {
               <Text style={styles.progressTitle}>Seu progresso</Text>
               <View style={styles.progressLevelRow}>
                 <View style={styles.progressLevelBadge}>
-                  <Text style={styles.progressLevelBadgeText}>{levelProgress.level}</Text>
+                  <Text style={styles.progressLevelBadgeText}>{levelGroupCode}</Text>
                 </View>
-                <Text style={styles.progressLevelLabel}>Nível atual</Text>
+                <View>
+                  <Text style={styles.progressLevelStage}>{levelStageName}</Text>
+                  <Text style={styles.progressLevelLabel}>Nível atual</Text>
+                </View>
               </View>
               <View style={styles.progressBarTrack}>
                 <View style={[styles.progressBarFill, { width: `${levelPct}%` }]} />
@@ -254,6 +259,7 @@ export function DashboardScreen() {
               <Text style={styles.progressBarLabel}>
                 {levelPct}% · {levelProgress.completed} de {levelProgress.total} lições concluídas
               </Text>
+              {levelAhead && <Text style={styles.progressNextLevel}>Próximo: {LEVEL_LABELS[levelAhead]}</Text>}
             </View>
             <View style={styles.progressQuoteBox}>
               <Text style={styles.progressQuoteText}>"Kleng Schrëtt féieren och zum Ziel."</Text>

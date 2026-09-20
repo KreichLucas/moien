@@ -258,7 +258,7 @@ function analyzeExercise(exercise: Exercise, trackedWords: Set<string>): Exercis
  * earned so far — including a phrase's own component words not having been
  * individually taught yet, not just the phrase itself appearing "too soon."
  * Pass units in the order a learner will actually encounter them (e.g.
- * `units.filter(u => u.level === 'A1')` in units.ts's own order).
+ * `units.filter(u => u.level === 'A1-INICIANTE')` in units.ts's own order).
  */
 export function validateProgression(units: Unit[]): CurriculumViolation[] {
   const trackedWords = collectTrackedWords(units);
