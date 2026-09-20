@@ -195,10 +195,21 @@ export function DashboardScreen() {
               </Text>
               <Text style={styles.heroSubtitle}>Vamos aprender hoje?</Text>
               {!isNarrow && (
-                <>
-                  <Text style={styles.heroQuote}>"Eng nei Sprooch ass eng nei Welt."</Text>
-                  <Text style={styles.heroQuoteAttribution}>— Provérbio luxemburguês</Text>
-                </>
+                <View style={styles.heroPhraseBlock}>
+                  <Text style={styles.heroPhraseLabel}>☀️ Frase do dia</Text>
+                  <Text style={styles.heroQuote}>"{phrase.lu}"</Text>
+                  <Text style={styles.heroQuoteAttribution}>{phrase.pt}</Text>
+                  <Pressable
+                    onPress={handlePlayPhrase}
+                    onHoverIn={onHoverIn('audio')}
+                    onHoverOut={onHoverOut('audio')}
+                    style={({ pressed }) => [styles.heroPhraseAudioRow, liftStyle(hoveredId === 'audio', 10, pressed)]}
+                    hitSlop={6}
+                  >
+                    <Ionicons name="volume-high" size={13} color={authColors.accentCyan} />
+                    <Text style={styles.heroPhraseAudioText}>Ouvir</Text>
+                  </Pressable>
+                </View>
               )}
               <View style={styles.heroButtonWrap}>
                 <Pressable
@@ -335,38 +346,6 @@ export function DashboardScreen() {
               })}
             </View>
           </ScrollView>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { marginBottom: 16 }]}>Frase do dia</Text>
-          <ImageBackground
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            source={require('../../assets/WhatsApp Image 2026-09-19 at 21.25.06.jpeg')}
-            style={styles.phraseCard}
-            imageStyle={{ borderRadius: 24 }}
-          >
-            <LinearGradient
-              colors={['rgba(4,11,24,0.45)', 'rgba(4,11,24,0.88)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.phraseOverlay}
-            />
-            <View style={styles.phraseContent}>
-              <View style={styles.phraseTextWrap}>
-                <Text style={styles.phraseLu}>"{phrase.lu}"</Text>
-                <Text style={styles.phrasePt}>{phrase.pt}</Text>
-              </View>
-              <Pressable
-                style={({ pressed }) => [styles.phraseAudioButton, liftStyle(hoveredId === 'audio', 26, pressed)]}
-                onPress={handlePlayPhrase}
-                onHoverIn={onHoverIn('audio')}
-                onHoverOut={onHoverOut('audio')}
-                hitSlop={8}
-              >
-                <Ionicons name="volume-high" size={22} color="#FFFFFF" />
-              </Pressable>
-            </View>
-          </ImageBackground>
         </View>
       </ScrollView>
     </View>

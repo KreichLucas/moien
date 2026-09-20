@@ -233,6 +233,15 @@ export function makeDashboardStyles() {
     heroSubtitle: { fontFamily: fontFamilies.displayRegular, fontSize: 16, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
     heroQuote: { fontFamily: fontFamilies.script, fontSize: 24, color: authColors.accentCyan, marginTop: 20 },
     heroQuoteAttribution: { fontFamily: fontFamilies.displayRegular, fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
+    // The former standalone "Frase do dia" section, now living inside the
+    // hero card in the spot the old static proverb used to occupy — kept
+    // compact (small label, existing script-font quote style, a plain text
+    // link rather than the old section's big 52px audio circle) so the
+    // hero's height doesn't grow.
+    heroPhraseBlock: { marginTop: 4 },
+    heroPhraseLabel: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 16 },
+    heroPhraseAudioRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, alignSelf: 'flex-start' },
+    heroPhraseAudioText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12, color: authColors.accentCyan },
     // No marginTop here on purpose — a margin on this element (or on the
     // Pressable wrapping it) would still count as part of that element's
     // own box for layout, and box-shadow paints around the FULL box,
@@ -408,26 +417,5 @@ export function makeDashboardStyles() {
     journeyConnector: { width: 32, height: 2, backgroundColor: authColors.divider, marginTop: 27 },
     journeyConnectorDone: { backgroundColor: authColors.accentBlue },
 
-    phraseCard: {
-      borderRadius: 24,
-      overflow: 'hidden',
-      minHeight: 150,
-    },
-    phraseOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-    phraseContent: { padding: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flex: 1 },
-    phraseTextWrap: { flex: 1 },
-    phraseCardTitle: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12, color: 'rgba(255,255,255,0.75)', marginBottom: 10 },
-    phraseLu: { fontFamily: fontFamilies.displayBold, fontSize: 22, color: '#FFFFFF' },
-    phrasePt: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: 'rgba(255,255,255,0.8)', marginTop: 6 },
-    phraseAudioButton: {
-      width: 52,
-      height: 52,
-      borderRadius: 26,
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.35)',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
   });
 }
