@@ -6,7 +6,7 @@ import { browserLocalPersistence, browserPopupRedirectResolver, initializeAuth }
 // "react-native" condition, so TS can't see it even though it's present at
 // runtime when Metro bundles this file for iOS/Android.
 import { getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -29,4 +29,10 @@ export const auth = initializeAuth(app, {
   ...(Platform.OS === 'web' ? { popupRedirectResolver: browserPopupRedirectResolver } : {}),
 });
 
-export const db = getFirestore(app);
+// ignoreUndefinedProperties: the SRS/mastery engine (src/learning/mastery.ts)
+// can legitimately leave a field like lastErrorType as `undefined` (e.g. an
+// item's first-ever attempt is correct, so there's no prior error to carry
+// forward) — the Firestore SDK otherwise rejects the *entire* setDoc for any
+// undefined field, silently failing to save progress. This drops just that
+// field instead, matching what Firestore already does for a missing field.
+export const db = initializeFirestore(app, { ignoreUndefinedProperties: true });

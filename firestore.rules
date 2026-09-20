@@ -2,7 +2,25 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /progress/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, delete: if request.auth != null && request.auth.uid == uid;
+
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.xp is int
+        && request.resource.data.xp >= 0
+        && request.resource.data.streak is int
+        && request.resource.data.streak >= 0
+        && request.resource.data.maxStreak is int
+        && request.resource.data.maxStreak >= 0
+        && (request.resource.data.lastActiveDate == null || request.resource.data.lastActiveDate is string)
+        && request.resource.data.completedLessonIds is list
+        && request.resource.data.activeDates is list
+        && request.resource.data.perfectLessonIds is list
+        && request.resource.data.itemMastery is map
+        && request.resource.data.recentAttempts is list
+        && request.resource.data.recentAttempts.size() <= 50
+        && (request.resource.data.pendingLesson == null || request.resource.data.pendingLesson is map)
+        && request.resource.data.pendingReviewItemIds is list;
     }
   }
 }
