@@ -204,7 +204,12 @@ function makeStyles(colors: ThemeColors) {
       marginTop: 10,
     },
     hintText: { flex: 1, fontSize: 14, color: colors.text, lineHeight: 20 },
-    footer: { marginTop: 'auto' },
+    // `marginTop: 'auto'` used to push this to the bottom of a taller
+    // scrolling container — now that the lesson screen sizes itself to fit
+    // the content exactly (no scroll), there's no leftover space for
+    // `auto` to expand into, so it resolved to 0 and the button ended up
+    // touching the chips right above it. A fixed gap here instead.
+    footer: { marginTop: 24 },
     button: {
       backgroundColor: colors.primary,
       borderRadius: 14,
