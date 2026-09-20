@@ -1,22 +1,24 @@
+import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { DiamondRow } from '../components/DiamondRow';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { ExerciseFillBlank } from '../components/ExerciseFillBlank';
 import { ExerciseMatch } from '../components/ExerciseMatch';
 import { ExerciseMultipleChoice } from '../components/ExerciseMultipleChoice';
 import { ExerciseOrderWords } from '../components/ExerciseOrderWords';
 import { ExerciseTranslate } from '../components/ExerciseTranslate';
+import { PremiumDiamondRow } from '../components/PremiumDiamondRow';
 import { ProgressBar } from '../components/ProgressBar';
-import { findLessonById } from '../content/path';
+import { buildPathUnits, findLessonById } from '../content/path';
 import { units } from '../content/units';
 import { buildSession, insertMicroReview, SessionCard } from '../learning/engine';
 import { EXERCISE_INDEX, ITEM_REGISTRY } from '../learning/registry';
 import { DYNAMIC_REVIEW_LESSON_ID, getCachedReviewLesson } from '../learning/reviewSession';
 import { AttemptResult, ExerciseOutcome } from '../learning/types';
 import { RootStackParamList } from '../navigation/types';
-import { ThemeColors, useTheme } from '../theme/theme';
 import { useProgress } from '../state/ProgressContext';
+import { authColors } from './authStyles';
+import { makeLessonChromeStyles } from './lessonStyles';
 import { playComplete, playCorrect, playWrong } from '../utils/sounds';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Lesson'>;
@@ -31,8 +33,11 @@ export function LessonScreen({ route, navigation }: Props) {
   const lesson =
     lessonId === DYNAMIC_REVIEW_LESSON_ID ? getCachedReviewLesson()! : findLessonById(units, lessonId)!;
   const { progress, completeLesson, savePendingLesson, markPendingReview } = useProgress();
-  const colors = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useMemo(() => makeLessonChromeStyles(), []);
+  // Which module owns this lesson, for the header breadcrumb — undefined
+  // for the dynamic Praticar session, which isn't part of any unit's fixed
+  // path, so the breadcrumb just falls back to the lesson's own title.
+  const parentUnit = useMemo(() => buildPathUnits(units).find((u) => u.lessons.some((l) => l.id === lessonId)), [lessonId]);
 
   // The static per-level review lesson from content/path.ts keeps its own
   // fixed, deterministically-shuffled exercise set — the dynamic engine
@@ -178,45 +183,53 @@ export function LessonScreen({ route, navigation }: Props) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.page}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.close}>✕</Text>
+        <Pressable onPress={() => navigation.goBack()} style={styles.exitButton} hitSlop={8}>
+          <Ionicons name="arrow-back" size={16} color={authColors.textPrimary} />
+          <Text style={styles.exitButtonText}>Sair da lição</Text>
         </Pressable>
-        <ProgressBar current={currentIndex} total={total} />
-        {diamondsEnabled && <DiamondRow lives={lives} />}
+
+        <View style={styles.centerColumn}>
+          <View style={styles.breadcrumb}>
+            {parentUnit && <Text style={styles.breadcrumbUnit}>{parentUnit.title}</Text>}
+            {parentUnit && <Text style={styles.breadcrumbSeparator}>›</Text>}
+            <Text style={styles.breadcrumbLesson}>{lesson.title}</Text>
+          </View>
+          <ProgressBar current={currentIndex} total={total} />
+          <Text style={styles.exerciseCounter}>
+            {currentIndex + 1} de {total}
+          </Text>
+        </View>
+
+        {diamondsEnabled ? <PremiumDiamondRow lives={lives} /> : <View />}
       </View>
 
-      {card.exercise.type === 'multipleChoice' && (
-        <ExerciseMultipleChoice key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-      )}
-      {card.exercise.type === 'translate' && (
-        <ExerciseTranslate key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-      )}
-      {card.exercise.type === 'match' && (
-        <ExerciseMatch key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-      )}
-      {card.exercise.type === 'fillBlank' && (
-        <ExerciseFillBlank key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-      )}
-      {card.exercise.type === 'orderWords' && (
-        <ExerciseOrderWords key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-      )}
+      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.examCard}>
+          <View style={styles.examBadgeRow}>
+            <Text style={styles.examBadge}>
+              EXERCÍCIO {currentIndex + 1} DE {total}
+            </Text>
+          </View>
+
+          {card.exercise.type === 'multipleChoice' && (
+            <ExerciseMultipleChoice key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+          )}
+          {card.exercise.type === 'translate' && (
+            <ExerciseTranslate key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+          )}
+          {card.exercise.type === 'match' && (
+            <ExerciseMatch key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+          )}
+          {card.exercise.type === 'fillBlank' && (
+            <ExerciseFillBlank key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+          )}
+          {card.exercise.type === 'orderWords' && (
+            <ExerciseOrderWords key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
-}
-
-function makeStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
-      paddingHorizontal: 16,
-      paddingTop: 60,
-      paddingBottom: 12,
-    },
-    close: { fontSize: 22, color: colors.textSecondary, fontWeight: '600' },
-  });
 }

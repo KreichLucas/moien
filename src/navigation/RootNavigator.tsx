@@ -18,7 +18,6 @@ import { DiamondRecoveryScreen } from '../screens/DiamondRecoveryScreen';
 import { HomeScreen } from '../screens/HomeScreen';
 import { LessonScreen } from '../screens/LessonScreen';
 import { LoginScreen } from '../screens/LoginScreen';
-import { ObjectiveScreen } from '../screens/ObjectiveScreen';
 import { OutOfDiamondsScreen } from '../screens/OutOfDiamondsScreen';
 import { PracticeScreen } from '../screens/PracticeScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -174,7 +173,6 @@ export function RootNavigator() {
           <Stack.Screen name="Result" component={ResultScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="Streak" component={StreakScreen} options={{ presentation: 'modal' }} />
           <Stack.Screen name="Settings" component={SettingsScreen} options={{ presentation: 'modal' }} />
-          <Stack.Screen name="Objective" component={ObjectiveScreen} />
           <Stack.Screen name="OutOfDiamonds" component={OutOfDiamondsScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="DiamondRecovery" component={DiamondRecoveryScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="Learn" component={HomeScreen} />

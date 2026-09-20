@@ -6,7 +6,7 @@ import { LessonNode } from '../components/LessonNode';
 import { LessonStartModal } from '../components/LessonStartModal';
 import { StreakCalendar } from '../components/StreakCalendar';
 import { LEVEL_LABELS, getLevelProgress } from '../content/levels';
-import { PathUnit, buildPathUnits, getLessonStatus } from '../content/path';
+import { PathUnit, buildPathUnits, getLessonStatus, getNextLessonForUnit } from '../content/path';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
@@ -103,7 +103,10 @@ export function HomeScreen() {
                         title={`${unit.title} · ${completedCount}/${unit.lessons.length}`}
                         status={objectiveStatus}
                         icon={unit.icon}
-                        onPress={() => navigation.navigate('Objective', { unitId: unit.id })}
+                        onPress={() => {
+                          const lesson = getNextLessonForUnit(unit, progress.completedLessonIds);
+                          navigation.navigate('Lesson', { lessonId: lesson.id });
+                        }}
                       />
                     </View>
                   </View>

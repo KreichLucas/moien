@@ -3,7 +3,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ITEM_REGISTRY } from '../learning/registry';
 import { ExerciseOutcome } from '../learning/types';
 import { MatchExercise } from '../types/content';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { ThemeColors } from '../theme/theme';
+import { lessonColors } from '../screens/lessonStyles';
 import { shuffle } from '../utils/shuffle';
 
 export function ExerciseMatch({
@@ -13,7 +14,7 @@ export function ExerciseMatch({
   exercise: MatchExercise;
   onComplete: (outcome: ExerciseOutcome) => void;
 }) {
-  const colors = useTheme();
+  const colors = lessonColors;
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const ptWords = useMemo(() => shuffle(exercise.pairs.map((p) => p.pt)), [exercise]);
   const luWords = useMemo(() => shuffle(exercise.pairs.map((p) => p.lu)), [exercise]);

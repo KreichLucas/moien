@@ -1,11 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { GLOSSARY_LU_TO_PT, GLOSSARY_PT_TO_LU } from '../content/glossary';
 import { itemIdsForExercise } from '../learning/itemExtraction';
 import { ITEM_REGISTRY } from '../learning/registry';
 import { ExerciseOutcome } from '../learning/types';
 import { MultipleChoiceExercise } from '../types/content';
-import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle } from '../theme/theme';
+import { lessonColors } from '../screens/lessonStyles';
 import { LanguageTag } from './LanguageTag';
 import { TappableSentence } from './TappableSentence';
 
@@ -16,7 +18,7 @@ export function ExerciseMultipleChoice({
   exercise: MultipleChoiceExercise;
   onComplete: (outcome: ExerciseOutcome) => void;
 }) {
-  const colors = useTheme();
+  const colors = lessonColors;
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const [selected, setSelected] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
@@ -36,6 +38,18 @@ export function ExerciseMultipleChoice({
     setChecked(true);
   };
 
+  // Best-effort TTS, same approach as the dashboard's phrase-of-day audio
+  // button — most browsers don't ship a real Luxembourgish voice, so this
+  // reads with an approximate accent rather than perfect pronunciation.
+  const handlePlayPrompt = () => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(exercise.prompt);
+      utterance.lang = exercise.promptLang === 'lu' ? 'lb-LU' : 'pt-PT';
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
   const handleContinue = () => {
     const itemIds = itemIdsForExercise(exercise, ITEM_REGISTRY);
     onComplete({
@@ -52,14 +66,22 @@ export function ExerciseMultipleChoice({
   return (
     <View style={styles.container}>
       <LanguageTag lang={exercise.promptLang} />
-      <View style={styles.promptWrapper}>
-        <TappableSentence
-          text={exercise.prompt}
-          glossary={wordGlossary}
-          textStyle={styles.promptText}
-          activeWord={wordHint?.word ?? null}
-          onWordPress={(word, gloss) => setWordHint((w) => (w?.word === word ? null : { word, gloss }))}
-        />
+      <Text style={styles.instruction}>
+        {exercise.promptLang === 'lu' ? 'Qual é a tradução de:' : 'Qual é a tradução em luxemburguês de:'}
+      </Text>
+      <View style={styles.promptCard}>
+        <View style={styles.promptWrapper}>
+          <TappableSentence
+            text={exercise.prompt}
+            glossary={wordGlossary}
+            textStyle={styles.promptText}
+            activeWord={wordHint?.word ?? null}
+            onWordPress={(word, gloss) => setWordHint((w) => (w?.word === word ? null : { word, gloss }))}
+          />
+        </View>
+        <Pressable onPress={handlePlayPrompt} style={({ pressed }) => [styles.audioButton, pressedStyle(pressed)]} hitSlop={8}>
+          <Ionicons name="volume-high" size={20} color="#FFFFFF" />
+        </Pressable>
       </View>
       {wordHint && (
         <View style={styles.wordHintBox}>
@@ -78,6 +100,7 @@ export function ExerciseMultipleChoice({
         } else if (isSelected) {
           optionStyle = styles.optionSelected;
         }
+        const letter = String.fromCharCode(65 + index);
         return (
           <Pressable
             key={index}
@@ -91,10 +114,17 @@ export function ExerciseMultipleChoice({
               }
             }}
           >
-            <Text style={styles.optionText}>{option}</Text>
-            {isWrongSelected && exercise.hint && (
-              <Text style={styles.hintTap}>{showHint ? 'toque para ocultar a dica 💡' : 'toque para ver a dica 💡'}</Text>
-            )}
+            <View style={[styles.optionLetter, (isSelected || (checked && index === exercise.correctIndex)) && styles.optionLetterActive]}>
+              <Text style={[styles.optionLetterText, (isSelected || (checked && index === exercise.correctIndex)) && styles.optionLetterTextActive]}>
+                {letter}
+              </Text>
+            </View>
+            <View style={styles.optionContent}>
+              <Text style={styles.optionText}>{option}</Text>
+              {isWrongSelected && exercise.hint && (
+                <Text style={styles.hintTap}>{showHint ? 'toque para ocultar a dica 💡' : 'toque para ver a dica 💡'}</Text>
+              )}
+            </View>
           </Pressable>
         );
       })}
@@ -131,8 +161,30 @@ export function ExerciseMultipleChoice({
 function makeStyles(colors: ThemeColors) {
   return StyleSheet.create({
     container: { flex: 1, padding: 20 },
-    promptWrapper: { marginBottom: 12 },
+    instruction: { fontSize: 15, color: colors.textSecondary, marginBottom: 14, textAlign: 'center' },
+    promptCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 16,
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 16,
+      paddingVertical: 18,
+      paddingHorizontal: 20,
+      marginBottom: 24,
+    },
+    promptWrapper: { flex: 1 },
     promptText: { fontSize: 26, fontWeight: '700', color: colors.text },
+    audioButton: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     wordHintBox: {
       backgroundColor: colors.surface,
       borderRadius: 12,
@@ -141,6 +193,9 @@ function makeStyles(colors: ThemeColors) {
     },
     wordHintText: { fontSize: 14, color: colors.text, lineHeight: 20 },
     option: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
       borderWidth: 2,
       borderColor: colors.border,
       borderRadius: 12,
@@ -150,6 +205,19 @@ function makeStyles(colors: ThemeColors) {
     optionSelected: { borderColor: colors.selectedBorder, backgroundColor: colors.selectedBg },
     optionCorrect: { borderColor: colors.correctBorder, backgroundColor: colors.correctBg },
     optionWrong: { borderColor: colors.wrongBorder, backgroundColor: colors.wrongBg },
+    optionLetter: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      borderWidth: 1,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    optionLetterActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+    optionLetterText: { fontSize: 13, fontWeight: '700', color: colors.textSecondary },
+    optionLetterTextActive: { color: colors.buttonTextOnPrimary },
+    optionContent: { flex: 1 },
     optionText: { fontSize: 17, color: colors.text },
     hintTap: { fontSize: 12, color: colors.accent, fontWeight: '600', marginTop: 6 },
     hintBox: {

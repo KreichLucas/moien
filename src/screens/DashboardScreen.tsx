@@ -6,6 +6,7 @@ import React, { useMemo, useState } from 'react';
 import { ImageBackground, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import { getPhraseOfTheDay } from '../content/dailyPhrases';
 import { LEVEL_LABELS, getLevelProgress } from '../content/levels';
+import { getNextLessonForUnit } from '../content/path';
 import { units } from '../content/units';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
@@ -292,7 +293,11 @@ export function DashboardScreen() {
               return (
                 <Pressable
                   key={m.id}
-                  onPress={() => navigation.navigate('Objective', { unitId: m.id })}
+                  onPress={() => {
+                    const unit = units.find((u) => u.id === m.id)!;
+                    const lesson = getNextLessonForUnit(unit, progress.completedLessonIds);
+                    navigation.navigate('Lesson', { lessonId: lesson.id });
+                  }}
                   onHoverIn={onHoverIn(`module-${m.id}`)}
                   onHoverOut={onHoverOut(`module-${m.id}`)}
                   style={({ pressed }) => [

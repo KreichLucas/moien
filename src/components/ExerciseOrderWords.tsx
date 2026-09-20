@@ -4,7 +4,8 @@ import { itemIdsForExercise } from '../learning/itemExtraction';
 import { ITEM_REGISTRY } from '../learning/registry';
 import { ExerciseOutcome } from '../learning/types';
 import { OrderWordsExercise } from '../types/content';
-import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle } from '../theme/theme';
+import { lessonColors } from '../screens/lessonStyles';
 import { shuffle } from '../utils/shuffle';
 
 export function ExerciseOrderWords({
@@ -14,7 +15,7 @@ export function ExerciseOrderWords({
   exercise: OrderWordsExercise;
   onComplete: (outcome: ExerciseOutcome) => void;
 }) {
-  const colors = useTheme();
+  const colors = lessonColors;
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const bank = useMemo(() => shuffle(exercise.words), [exercise]);
 

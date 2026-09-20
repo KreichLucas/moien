@@ -1,31 +1,30 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ThemeColors, useTheme } from '../theme/theme';
+import { authColors } from '../screens/authStyles';
 
+/**
+ * Segmented dot progress bar for the lesson screen — one dot per exercise
+ * in the session, filled up to `current`. Driven entirely by the real
+ * `total` (never hardcoded), so it renders correctly for any lesson
+ * regardless of how many exercises it actually has.
+ */
 export function ProgressBar({ current, total }: { current: number; total: number }) {
-  const colors = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
-  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
   return (
-    <View style={styles.track}>
-      <View style={[styles.fill, { width: `${pct}%` }]} />
+    <View style={styles.row}>
+      {Array.from({ length: total }, (_, i) => (
+        <View key={i} style={[styles.dot, i < current && styles.dotFilled]} />
+      ))}
     </View>
   );
 }
 
-function makeStyles(colors: ThemeColors) {
-  return StyleSheet.create({
-    track: {
-      flex: 1,
-      height: 14,
-      borderRadius: 7,
-      backgroundColor: colors.border,
-      overflow: 'hidden',
-    },
-    fill: {
-      height: '100%',
-      backgroundColor: colors.primary,
-      borderRadius: 7,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', gap: 4, flexWrap: 'wrap', justifyContent: 'center' },
+  dot: {
+    width: 20,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: authColors.inputBorder,
+  },
+  dotFilled: { backgroundColor: authColors.accentCyan },
+});

@@ -5,7 +5,8 @@ import { itemIdsForExercise } from '../learning/itemExtraction';
 import { ITEM_REGISTRY } from '../learning/registry';
 import { ExerciseOutcome } from '../learning/types';
 import { FillBlankExercise } from '../types/content';
-import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
+import { ThemeColors, cardShadow, pressedStyle } from '../theme/theme';
+import { lessonColors } from '../screens/lessonStyles';
 import { LanguageTag } from './LanguageTag';
 import { TappableSentence } from './TappableSentence';
 import { shuffle } from '../utils/shuffle';
@@ -17,7 +18,7 @@ export function ExerciseFillBlank({
   exercise: FillBlankExercise;
   onComplete: (outcome: ExerciseOutcome) => void;
 }) {
-  const colors = useTheme();
+  const colors = lessonColors;
   const styles = useMemo(() => makeStyles(colors), [colors]);
   const wordBank = useMemo(() => shuffle(exercise.options), [exercise]);
 

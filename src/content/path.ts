@@ -79,9 +79,9 @@ export type LessonStatus = 'locked' | 'unlocked' | 'completed';
 /**
  * A lesson is unlocked once every lesson before it in the flat path order
  * has been completed (the same linear-unlock rule HomeScreen has always
- * used for the trail, extracted here so ObjectiveScreen's 5 "barras" and
- * the trail's single objective-icon summary can both compute it the same
- * way for a given lesson without duplicating the rule).
+ * used for the trail, extracted here so the trail's per-lesson nodes and
+ * `getNextLessonForUnit` below can both compute it the same way for a
+ * given lesson without duplicating the rule).
  */
 export function getLessonStatus(
   allLessons: Lesson[],
@@ -93,4 +93,15 @@ export function getLessonStatus(
   const isFirst = lessonIndex === 0;
   const previousCompleted = !isFirst && completedLessonIds.includes(allLessons[lessonIndex - 1].id);
   return isFirst || previousCompleted ? 'unlocked' : 'locked';
+}
+
+/**
+ * Which lesson ("barra") a tap on a `kind: 'objective'` module should jump
+ * straight into — the first one the learner hasn't finished yet, or the
+ * last one if the whole module is already done (so reopening a finished
+ * module still lands somewhere sensible instead of nowhere).
+ */
+export function getNextLessonForUnit(unit: Unit, completedLessonIds: string[]): Lesson {
+  const next = unit.lessons.find((l) => !completedLessonIds.includes(l.id));
+  return next ?? unit.lessons[unit.lessons.length - 1];
 }

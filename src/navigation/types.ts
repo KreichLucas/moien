@@ -6,7 +6,6 @@ export type RootStackParamList = {
   Result: { xpEarned: number; correctCount: number; totalCount: number };
   Streak: undefined;
   Settings: undefined;
-  Objective: { unitId: string };
   OutOfDiamonds: { lessonId: string };
   DiamondRecovery: { lessonId: string };
   Learn: undefined;
