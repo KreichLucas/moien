@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useRef, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View, useWindowDimensions } from 'react-native';
 import { ExerciseFillBlank } from '../components/ExerciseFillBlank';
 import { ExerciseMatch } from '../components/ExerciseMatch';
 import { ExerciseMultipleChoice } from '../components/ExerciseMultipleChoice';
@@ -17,8 +17,9 @@ import { DYNAMIC_REVIEW_LESSON_ID, getCachedReviewLesson } from '../learning/rev
 import { AttemptResult, ExerciseOutcome } from '../learning/types';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
+import { useAutoFitScale } from '../utils/useAutoFitScale';
 import { authColors } from './authStyles';
-import { makeLessonChromeStyles } from './lessonStyles';
+import { CONTENT_WIDTH, makeLessonChromeStyles } from './lessonStyles';
 import { playComplete, playCorrect, playWrong } from '../utils/sounds';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Lesson'>;
@@ -34,6 +35,20 @@ export function LessonScreen({ route, navigation }: Props) {
     lessonId === DYNAMIC_REVIEW_LESSON_ID ? getCachedReviewLesson()! : findLessonById(units, lessonId)!;
   const { progress, completeLesson, savePendingLesson, markPendingReview } = useProgress();
   const styles = useMemo(() => makeLessonChromeStyles(), []);
+  const { onStageLayout, onNaturalLayout, scale } = useAutoFitScale();
+  // Width is handled responsively (shrinks with the viewport on narrow
+  // phones, same as any normal layout) rather than through the scale
+  // transform below — scaling width down uniformly with everything else
+  // would shrink the font pixel-for-pixel with it, and on a real phone
+  // that reads as illegibly small well before the design's natural size is
+  // reached. The scale transform is left to do only what plain responsive
+  // width can't: shrinking the whole card when it's simply too TALL for a
+  // short viewport (a laptop window, a landscape phone, etc).
+  const { width: windowWidth } = useWindowDimensions();
+  const contentWidth = Math.min(CONTENT_WIDTH, windowWidth - 40);
+  // Below this the exit link + breadcrumb/progress + diamonds don't all
+  // fit on one row even with wrapping — see `headerNarrow`.
+  const isHeaderNarrow = contentWidth < 460;
   // Which module owns this lesson, for the header breadcrumb — undefined
   // for the dynamic Praticar session, which isn't part of any unit's fixed
   // path, so the breadcrumb just falls back to the lesson's own title.
@@ -197,52 +212,56 @@ export function LessonScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.page}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.exitButton} hitSlop={8}>
-          <Ionicons name="arrow-back" size={16} color={authColors.textPrimary} />
-          <Text style={styles.exitButtonText}>Sair da lição</Text>
-        </Pressable>
+      <View style={styles.stage} onLayout={onStageLayout}>
+        <View onLayout={onNaturalLayout}>
+          <View style={[styles.scaleContent, { transform: [{ scale }] }]}>
+            <View style={[styles.header, { width: contentWidth }, isHeaderNarrow && styles.headerNarrow]}>
+              <Pressable onPress={() => navigation.goBack()} style={styles.exitButton} hitSlop={8}>
+                <Ionicons name="arrow-back" size={16} color={authColors.textPrimary} />
+                <Text style={styles.exitButtonText}>Sair da lição</Text>
+              </Pressable>
 
-        <View style={styles.centerColumn}>
-          <View style={styles.breadcrumb}>
-            {parentUnit && <Text style={styles.breadcrumbUnit}>{parentUnit.title}</Text>}
-            {parentUnit && <Text style={styles.breadcrumbSeparator}>›</Text>}
-            <Text style={styles.breadcrumbLesson}>{lesson.title}</Text>
+              <View style={[styles.centerColumn, isHeaderNarrow && styles.centerColumnNarrow]}>
+                <View style={styles.breadcrumb}>
+                  {parentUnit && <Text style={styles.breadcrumbUnit}>{parentUnit.title}</Text>}
+                  {parentUnit && <Text style={styles.breadcrumbSeparator}>›</Text>}
+                  <Text style={styles.breadcrumbLesson}>{lesson.title}</Text>
+                </View>
+                <ProgressBar current={currentIndex} total={total} />
+                <Text style={styles.exerciseCounter}>
+                  {currentIndex + 1} de {total}
+                </Text>
+              </View>
+
+              {diamondsEnabled ? <PremiumDiamondRow lives={lives} /> : <View />}
+            </View>
+
+            <View style={[styles.examCard, { width: contentWidth }]}>
+              <View style={styles.examBadgeRow}>
+                <Text style={styles.examBadge}>
+                  EXERCÍCIO {currentIndex + 1} DE {total}
+                </Text>
+              </View>
+
+              {card.exercise.type === 'multipleChoice' && (
+                <ExerciseMultipleChoice key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+              )}
+              {card.exercise.type === 'translate' && (
+                <ExerciseTranslate key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+              )}
+              {card.exercise.type === 'match' && (
+                <ExerciseMatch key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+              )}
+              {card.exercise.type === 'fillBlank' && (
+                <ExerciseFillBlank key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+              )}
+              {card.exercise.type === 'orderWords' && (
+                <ExerciseOrderWords key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
+              )}
+            </View>
           </View>
-          <ProgressBar current={currentIndex} total={total} />
-          <Text style={styles.exerciseCounter}>
-            {currentIndex + 1} de {total}
-          </Text>
         </View>
-
-        {diamondsEnabled ? <PremiumDiamondRow lives={lives} /> : <View />}
       </View>
-
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.examCard}>
-          <View style={styles.examBadgeRow}>
-            <Text style={styles.examBadge}>
-              EXERCÍCIO {currentIndex + 1} DE {total}
-            </Text>
-          </View>
-
-          {card.exercise.type === 'multipleChoice' && (
-            <ExerciseMultipleChoice key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-          )}
-          {card.exercise.type === 'translate' && (
-            <ExerciseTranslate key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-          )}
-          {card.exercise.type === 'match' && (
-            <ExerciseMatch key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-          )}
-          {card.exercise.type === 'fillBlank' && (
-            <ExerciseFillBlank key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-          )}
-          {card.exercise.type === 'orderWords' && (
-            <ExerciseOrderWords key={card.exercise.id} exercise={card.exercise} onComplete={handleExerciseComplete} />
-          )}
-        </View>
-      </ScrollView>
     </View>
   );
 }

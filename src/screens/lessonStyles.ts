@@ -37,39 +37,58 @@ export const lessonColors: ThemeColors = {
   elevation: 6,
 };
 
+// The lesson screen's "natural" (unscaled) design width, shared by the
+// header and the exam card so the whole thing measures as one coherent
+// block for the no-scroll auto-fit transform (see `useAutoFitScale`) —
+// a stretched-to-the-page-edge header would have no fixed natural size to
+// scale from, and a mismatched width between the two would look unaligned
+// once scaled.
+export const CONTENT_WIDTH = 700;
+
 export function makeLessonChromeStyles() {
   return StyleSheet.create({
     page: {
       flex: 1,
       minHeight: '100%',
       backgroundColor: authColors.pageBg,
+      overflow: 'hidden',
     },
+    // Fills the viewport and centers whatever's inside — the auto-fit scale
+    // transform lives on the child measured against this box's own size.
+    stage: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    scaleContent: { alignItems: 'center' },
     header: {
+      width: CONTENT_WIDTH,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12,
-      paddingHorizontal: 20,
-      paddingTop: 20,
       paddingBottom: 16,
-      flexWrap: 'wrap',
     },
+    // Below the breakpoint, `centerColumn`'s own minWidth plus the exit
+    // link and diamonds on either side add up to more than the available
+    // width — flexWrap alone doesn't reliably move a `flex: 1` item to a
+    // new line before it overflows, so this stacks the three sections
+    // explicitly instead (same fix already used on the result/all-modules
+    // headers).
+    headerNarrow: { flexDirection: 'column', gap: 10 },
     exitButton: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 4 },
     exitButtonText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 14, color: authColors.textPrimary },
-    centerColumn: { flex: 1, minWidth: 200, alignItems: 'center', gap: 6 },
+    centerColumn: { flex: 1, minWidth: 160, alignItems: 'center', gap: 6 },
+    centerColumnNarrow: { flex: 0, minWidth: 0, width: '100%' },
     breadcrumb: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     breadcrumbUnit: { fontFamily: fontFamilies.displayBold, fontSize: 14, color: authColors.textPrimary },
     breadcrumbSeparator: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: authColors.textSecondary },
     breadcrumbLesson: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: authColors.textSecondary },
     exerciseCounter: { fontFamily: fontFamilies.displayRegular, fontSize: 12, color: authColors.textSecondary },
-    scroll: { flex: 1 },
-    // `flexGrow: 1` + `justifyContent: 'center'` centers the card vertically
-    // when it's shorter than the viewport (most exercises), while still
-    // scrolling normally once content is taller than the available space.
-    scrollContent: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 20 },
     examCard: {
-      width: '100%',
-      maxWidth: 680,
+      width: CONTENT_WIDTH,
       backgroundColor: authColors.cardBg,
       borderWidth: 1,
       borderColor: authColors.cardBorder,
