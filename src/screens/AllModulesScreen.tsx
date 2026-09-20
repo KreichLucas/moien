@@ -62,6 +62,7 @@ export function AllModulesScreen({ navigation }: Props) {
   return (
     <View style={styles.page}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.contentInner}>
         <View style={styles.header}>
           <View style={styles.topRow}>
             <View>
@@ -221,6 +222,7 @@ export function AllModulesScreen({ navigation }: Props) {
             <Text style={styles.emptySubtitle}>Novos módulos chegando em breve para {LEVEL_TABS.find((t) => t.id === activeTab)?.label}.</Text>
           </View>
         )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -263,8 +265,8 @@ function ModuleCard({
         !isLocked && liftStyle(isHovered, 20, pressed),
       ]}
     >
-      <View style={[styles.cardIconBadge, isComplete && styles.cardIconBadgeComplete]}>
-        <Text style={styles.cardIconText}>{entry.icon}</Text>
+      <View style={[styles.cardIconBadge, isComplete && styles.cardIconBadgeComplete, isLocked && styles.cardIconBadgeLocked]}>
+        <Ionicons name={entry.icon} size={24} color={isComplete ? '#22C55E' : isLocked ? authColors.textMuted : authColors.accentCyan} />
       </View>
       <View style={styles.cardTextBlock}>
         <Text style={styles.cardTitle} numberOfLines={1}>
@@ -292,7 +294,12 @@ function ModuleCard({
 function makeStyles() {
   return StyleSheet.create({
     page: { flex: 1, minHeight: '100%', backgroundColor: authColors.pageBg },
-    scrollContent: { paddingBottom: 60 },
+    scrollContent: { paddingBottom: 60, alignItems: 'center' },
+    // Caps how wide the grid can stretch on very large/ultra-wide screens —
+    // below this width it's just 100% wide (no visual change from before),
+    // above it the whole section centers with even margins instead of the
+    // cards clumping to the left with empty space on the right.
+    contentInner: { width: '100%', maxWidth: 1600 },
 
     header: { paddingHorizontal: 28, paddingTop: 24, paddingBottom: 8, gap: 20 },
     topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 },
@@ -409,10 +416,13 @@ function makeStyles() {
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
     card: {
       flexGrow: 1,
-      // Tuned so exactly 4 fit per row at typical desktop widths (matching
-      // the reference), instead of shrinking to fit a 5th.
+      // flexBasis controls how many columns wrap per row (~4 at typical
+      // desktop widths); maxWidth only caps how far flexGrow can stretch
+      // each card to fill the row — raised so 4 cards actually reach the
+      // row's full width instead of stopping short and leaving a gap on
+      // the right, without letting cards blow up on ultra-wide screens.
       flexBasis: 300,
-      maxWidth: 360,
+      maxWidth: 420,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 14,
@@ -433,7 +443,7 @@ function makeStyles() {
       justifyContent: 'center',
     },
     cardIconBadgeComplete: { backgroundColor: 'rgba(34, 197, 94, 0.16)' },
-    cardIconText: { fontSize: 22 },
+    cardIconBadgeLocked: { backgroundColor: 'rgba(255, 255, 255, 0.06)' },
     cardTextBlock: { flex: 1, minWidth: 0 },
     cardTitle: { fontFamily: fontFamilies.displayBold, fontSize: 14, color: authColors.textPrimary },
     cardSubtitle: { fontFamily: fontFamilies.displayRegular, fontSize: 11, color: authColors.textSecondary, marginTop: 4 },
