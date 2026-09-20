@@ -206,7 +206,7 @@ export function DashboardScreen() {
                     style={({ pressed }) => [styles.heroPhraseAudioRow, liftStyle(hoveredId === 'audio', 10, pressed)]}
                     hitSlop={6}
                   >
-                    <Ionicons name="volume-high" size={13} color={authColors.accentCyan} />
+                    <Ionicons name="volume-high" size={15} color={authColors.accentCyan} />
                     <Text style={styles.heroPhraseAudioText}>Ouvir</Text>
                   </Pressable>
                 </View>

@@ -231,17 +231,44 @@ export function makeDashboardStyles() {
     heroTitle: { fontFamily: fontFamilies.displayExtraBold, fontSize: 34, color: '#FFFFFF' },
     heroTitleNarrow: { fontSize: 24 },
     heroSubtitle: { fontFamily: fontFamilies.displayRegular, fontSize: 16, color: 'rgba(255,255,255,0.85)', marginTop: 4 },
-    heroQuote: { fontFamily: fontFamilies.script, fontSize: 24, color: authColors.accentCyan, marginTop: 20 },
-    heroQuoteAttribution: { fontFamily: fontFamilies.displayRegular, fontSize: 12, color: 'rgba(255,255,255,0.65)', marginTop: 4 },
+    heroQuote: { fontFamily: fontFamilies.script, fontSize: 28, color: authColors.accentCyan, marginTop: 14 },
+    heroQuoteAttribution: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: 'rgba(255,255,255,0.75)', marginTop: 5 },
     // The former standalone "Frase do dia" section, now living inside the
-    // hero card in the spot the old static proverb used to occupy — kept
-    // compact (small label, existing script-font quote style, a plain text
-    // link rather than the old section's big 52px audio circle) so the
-    // hero's height doesn't grow.
-    heroPhraseBlock: { marginTop: 4 },
-    heroPhraseLabel: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: 16 },
-    heroPhraseAudioRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, alignSelf: 'flex-start' },
-    heroPhraseAudioText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12, color: authColors.accentCyan },
+    // hero card in the spot the old static proverb used to occupy — a
+    // labeled chip (not just bare text) so it reads as its own modern,
+    // interactive little widget, still sized to fit comfortably inside the
+    // hero without pushing its height up much.
+    heroPhraseBlock: {
+      marginTop: 18,
+      backgroundColor: 'rgba(13, 25, 48, 0.45)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.14)',
+      borderRadius: 16,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      alignSelf: 'flex-start',
+      maxWidth: '100%',
+    },
+    heroPhraseLabel: {
+      fontFamily: fontFamilies.displaySemiBold,
+      fontSize: 13,
+      color: 'rgba(255,255,255,0.8)',
+      letterSpacing: 0.3,
+    },
+    heroPhraseAudioRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      marginTop: 12,
+      alignSelf: 'flex-start',
+      backgroundColor: 'rgba(56, 189, 248, 0.14)',
+      borderWidth: 1,
+      borderColor: 'rgba(56, 189, 248, 0.4)',
+      borderRadius: 999,
+      paddingVertical: 7,
+      paddingHorizontal: 14,
+    },
+    heroPhraseAudioText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 13, color: authColors.accentCyan },
     // No marginTop here on purpose — a margin on this element (or on the
     // Pressable wrapping it) would still count as part of that element's
     // own box for layout, and box-shadow paints around the FULL box,
