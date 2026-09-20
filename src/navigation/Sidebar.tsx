@@ -1,7 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
+import { getLevelProgress } from '../content/levels';
+import { units } from '../content/units';
 import { authColors, liftStyle, makeDashboardStyles } from '../screens/dashboardStyles';
+import { useProgress } from '../state/ProgressContext';
 
 export interface SidebarItem {
   id: string;
@@ -20,6 +23,9 @@ const styles = makeDashboardStyles();
 
 export function Sidebar({ items }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const { progress } = useProgress();
+  const levelProgress = useMemo(() => getLevelProgress(units, progress.completedLessonIds), [progress.completedLessonIds]);
+  const levelPct = levelProgress.total > 0 ? Math.min(100, Math.round((levelProgress.completed / levelProgress.total) * 100)) : 0;
 
   return (
     <View style={styles.sidebar}>
@@ -48,6 +54,29 @@ export function Sidebar({ items }: Props) {
             <Text style={[styles.navItemLabel, item.active && styles.navItemLabelActive]}>{item.label}</Text>
           </Pressable>
         ))}
+
+        <View style={styles.sidebarProgressCard}>
+          <View style={styles.sidebarProgressHeader}>
+            <Text style={styles.sidebarProgressLevel}>{levelProgress.level}</Text>
+            <Text style={styles.sidebarProgressPct}>{levelPct}%</Text>
+          </View>
+          <View style={styles.sidebarProgressBarTrack}>
+            <View style={[styles.sidebarProgressBarFill, { width: `${levelPct}%` }]} />
+          </View>
+          <Text style={styles.sidebarProgressCaption}>
+            {levelProgress.completed} de {levelProgress.total} lições concluídas
+          </Text>
+          <View style={styles.sidebarStatsRow}>
+            <View style={styles.sidebarStatChip}>
+              <Ionicons name="flame" size={14} color="#FF8A3D" />
+              <Text style={styles.sidebarStatChipText}>{progress.streak} dias</Text>
+            </View>
+            <View style={styles.sidebarStatChip}>
+              <Ionicons name="star" size={14} color="#FFD65A" />
+              <Text style={styles.sidebarStatChipText}>{progress.xp} XP</Text>
+            </View>
+          </View>
+        </View>
       </View>
 
       <View style={styles.sidebarBottom}>
