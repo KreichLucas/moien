@@ -230,17 +230,7 @@ export function DashboardScreen() {
 
           <View style={[styles.progressCard, isNarrow && styles.progressCardNarrow]}>
             <View>
-              <View style={styles.progressHeaderRow}>
-                <Text style={styles.progressTitle}>Seu progresso</Text>
-                <Pressable
-                  onPress={goToLearn}
-                  onHoverIn={onHoverIn('verDetalhes')}
-                  onHoverOut={onHoverOut('verDetalhes')}
-                  style={({ pressed }) => liftStyle(hoveredId === 'verDetalhes', 8, pressed)}
-                >
-                  <Text style={styles.progressLink}>Ver detalhes →</Text>
-                </Pressable>
-              </View>
+              <Text style={styles.progressTitle}>Seu progresso</Text>
               <View style={styles.progressLevelRow}>
                 <View style={styles.progressLevelBadge}>
                   <Text style={styles.progressLevelBadgeText}>{levelProgress.level}</Text>
@@ -253,20 +243,6 @@ export function DashboardScreen() {
               <Text style={styles.progressBarLabel}>
                 {levelPct}% · {levelProgress.completed} de {levelProgress.total} lições concluídas
               </Text>
-              <View style={styles.progressStatsRow}>
-                <View style={styles.progressStatItem}>
-                  <Text style={styles.progressStatValue}>🔥 {progress.streak}</Text>
-                  <Text style={styles.progressStatLabel}>dias seguidos</Text>
-                </View>
-                <View style={styles.progressStatItem}>
-                  <Text style={styles.progressStatValue}>⭐ {progress.xp}</Text>
-                  <Text style={styles.progressStatLabel}>XP total</Text>
-                </View>
-                <View style={styles.progressStatItem}>
-                  <Text style={styles.progressStatValue}>💎 0</Text>
-                  <Text style={styles.progressStatLabel}>diamantes</Text>
-                </View>
-              </View>
             </View>
             <View style={styles.progressQuoteBox}>
               <Text style={styles.progressQuoteText}>"Kleng Schrëtt féieren och zum Ziel."</Text>
