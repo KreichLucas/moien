@@ -5,6 +5,7 @@ import { recordAttempt } from '../learning/srs';
 import { AttemptResult } from '../learning/types';
 import { useAuth } from './AuthContext';
 import {
+  MAX_DIAMONDS,
   PendingLessonState,
   ProgressState,
   RECENT_ATTEMPTS_CAP,
@@ -29,6 +30,7 @@ type Action =
   | { type: 'RECORD_PRACTICE_ATTEMPTS'; attempts: AttemptResult[] }
   | { type: 'MARK_PENDING_REVIEW'; attempts: AttemptResult[] }
   | { type: 'SET_PENDING_LESSON'; pendingLesson: PendingLessonState | null }
+  | { type: 'SPEND_DIAMOND' }
   | { type: 'RESET' };
 
 function applyAttemptsToMastery(
@@ -76,6 +78,28 @@ function applyAttemptsToPendingReview(pendingReviewItemIds: string[], attempts: 
   return result;
 }
 
+/**
+ * Diamonds are a single account-wide resource now (see MAX_DIAMONDS):
+ * spent one at a time from any lesson mistake, but only ever restored in
+ * bulk once the whole pendingReviewItemIds backlog is cleared — not per
+ * correct answer. `diamondRecoveryCleared` is the running count of items
+ * resolved since diamonds last dropped below MAX, purely to give Prática a
+ * stable "X de Y concluídos" fraction (Y = cleared + still-outstanding)
+ * that grows correctly even if a fresh mistake elsewhere adds to the
+ * backlog mid-recovery, instead of a fixed snapshot total.
+ */
+function applyDiamondRecovery(
+  diamonds: number,
+  diamondRecoveryCleared: number,
+  previousPending: string[],
+  nextPending: string[]
+): { diamonds: number; diamondRecoveryCleared: number } {
+  if (diamonds >= MAX_DIAMONDS) return { diamonds, diamondRecoveryCleared: 0 };
+  const resolvedCount = previousPending.filter((id) => !nextPending.includes(id)).length;
+  if (nextPending.length === 0) return { diamonds: MAX_DIAMONDS, diamondRecoveryCleared: 0 };
+  return { diamonds, diamondRecoveryCleared: diamondRecoveryCleared + resolvedCount };
+}
+
 function reducer(state: ProgressState, action: Action): ProgressState {
   switch (action.type) {
     case 'HYDRATE':
@@ -107,6 +131,12 @@ function reducer(state: ProgressState, action: Action): ProgressState {
 
       const itemMastery = applyAttemptsToMastery(state.itemMastery, action.attempts, now);
       const pendingReviewItemIds = applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts);
+      const { diamonds, diamondRecoveryCleared } = applyDiamondRecovery(
+        state.diamonds,
+        state.diamondRecoveryCleared,
+        state.pendingReviewItemIds,
+        pendingReviewItemIds
+      );
       // Most-recent-first: the session's attempts happened in order, so the last one goes to index 0.
       const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
 
@@ -122,25 +152,33 @@ function reducer(state: ProgressState, action: Action): ProgressState {
         itemMastery,
         recentAttempts,
         pendingReviewItemIds,
+        diamonds,
+        diamondRecoveryCleared,
         // The lesson just finished for real — any paused/resumable snapshot is stale now.
         pendingLesson: null,
       };
     }
     case 'RECORD_PRACTICE_ATTEMPTS': {
-      // Diamond-recovery practice (and, in future, any other ad-hoc practice
-      // outside a full lesson) updates mastery/SRS exactly like a real
-      // attempt — that's what makes an item "reviewed" and lets it drop out
-      // of the due queue — but deliberately does NOT touch xp/streak/
-      // completedLessonIds/pendingLesson: it isn't completing a lesson, and
-      // granting XP for it would let a player farm XP by losing diamonds on
-      // purpose.
+      // Prática (and diamond-recovery, which now IS just Prática entered
+      // from an out-of-diamonds lesson) updates mastery/SRS exactly like a
+      // real attempt — that's what makes an item "reviewed" and lets it
+      // drop out of the due queue — but deliberately does NOT touch
+      // xp/streak/completedLessonIds/pendingLesson: it isn't completing a
+      // lesson, and granting XP for it would let a player farm XP by
+      // losing diamonds on purpose.
       const now = new Date().toISOString();
       const itemMastery = applyAttemptsToMastery(state.itemMastery, action.attempts, now);
       const pendingReviewItemIds = applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts);
+      const { diamonds, diamondRecoveryCleared } = applyDiamondRecovery(
+        state.diamonds,
+        state.diamondRecoveryCleared,
+        state.pendingReviewItemIds,
+        pendingReviewItemIds
+      );
       const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
-      return { ...state, itemMastery, recentAttempts, pendingReviewItemIds };
+      return { ...state, itemMastery, recentAttempts, pendingReviewItemIds, diamonds, diamondRecoveryCleared };
     }
-    case 'MARK_PENDING_REVIEW':
+    case 'MARK_PENDING_REVIEW': {
       // Fired live, per-answer, from LessonScreen — independent of mastery/
       // xp/streak, which stay batched until the lesson actually completes
       // (see completeLesson). This is what makes a mistake show up in
@@ -151,9 +189,19 @@ function reducer(state: ProgressState, action: Action): ProgressState {
       // with the batch update in RECORD_LESSON_RESULT/RECORD_PRACTICE_
       // ATTEMPTS — replaying the same already-applied attempts again nets
       // out to the same result, so no double-counting risk.
-      return { ...state, pendingReviewItemIds: applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts) };
+      const pendingReviewItemIds = applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts);
+      const { diamonds, diamondRecoveryCleared } = applyDiamondRecovery(
+        state.diamonds,
+        state.diamondRecoveryCleared,
+        state.pendingReviewItemIds,
+        pendingReviewItemIds
+      );
+      return { ...state, pendingReviewItemIds, diamonds, diamondRecoveryCleared };
+    }
     case 'SET_PENDING_LESSON':
       return { ...state, pendingLesson: action.pendingLesson };
+    case 'SPEND_DIAMOND':
+      return { ...state, diamonds: Math.max(0, state.diamonds - 1) };
     default:
       return state;
   }
@@ -166,6 +214,7 @@ interface ProgressContextValue {
   markPendingReview: (attempts: AttemptResult[]) => void;
   savePendingLesson: (pendingLesson: PendingLessonState) => void;
   clearPendingLesson: () => void;
+  spendDiamond: () => void;
   resetProgress: () => void;
   isLoaded: boolean;
 }
@@ -215,6 +264,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'SET_PENDING_LESSON', pendingLesson: null });
   };
 
+  const spendDiamond = () => {
+    dispatch({ type: 'SPEND_DIAMOND' });
+  };
+
   const resetProgress = () => {
     dispatch({ type: 'RESET' });
     if (uid) clearProgress(uid);
@@ -229,6 +282,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         markPendingReview,
         savePendingLesson,
         clearPendingLesson,
+        spendDiamond,
         resetProgress,
         isLoaded,
       }}

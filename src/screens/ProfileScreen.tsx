@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useMemo, useRef, useState } from 'react';
-import { Modal, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, StyleSheet } from 'react-native';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
+import { OpaqueDropdown } from '../components/OpaqueDropdown';
 import { PhotoConsentModal } from '../components/PhotoConsentModal';
 import { UserAvatar } from '../components/UserAvatar';
 import { LEVEL_LABELS, getLevelProgress } from '../content/levels';
@@ -44,66 +45,6 @@ function speak(text: string) {
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }
-}
-
-/**
- * Small "pick one from a list" pill. Renders its open menu through a
- * `Modal` (same top-layer pattern already used by PhotoConsentModal/
- * ChangePasswordModal) instead of a plain absolutely-positioned sibling
- * View — the previous version sat inside the same stacking context as the
- * vocabulary table's horizontal ScrollView, which on web ended up painting
- * table rows through the menu's background instead of reliably behind it,
- * no matter how high its zIndex was set. A Modal always paints in its own
- * top-level layer, so this guarantees the menu is opaque and above
- * everything, while looking pixel-identical (same dropdownMenu/Item
- * styles) — just positioned via the button's real on-screen coordinates
- * instead of a CSS-relative offset.
- */
-function Dropdown({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (v: string) => void }) {
-  const [open, setOpen] = useState(false);
-  const [menuLayout, setMenuLayout] = useState({ x: 0, y: 0, width: 0 });
-  const buttonRef = useRef<View>(null);
-
-  const openMenu = () => {
-    buttonRef.current?.measureInWindow((x, y, width, height) => {
-      setMenuLayout({ x, y: y + height + 6, width });
-      setOpen(true);
-    });
-  };
-
-  return (
-    <View style={styles.dropdownWrap}>
-      <Pressable ref={buttonRef} style={styles.dropdownButton} onPress={openMenu}>
-        <Text style={styles.dropdownButtonText} numberOfLines={1}>
-          {value}
-        </Text>
-        <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={14} color={authColors.textSecondary} />
-      </Pressable>
-      <Modal visible={open} transparent animationType="none" onRequestClose={() => setOpen(false)}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)}>
-          <Pressable
-            style={[styles.dropdownMenu, { top: menuLayout.y, left: menuLayout.x, minWidth: Math.max(menuLayout.width, 150) }]}
-            onPress={() => {}}
-          >
-            <ScrollView style={styles.dropdownMenuScroll}>
-              {options.map((opt) => (
-                <Pressable
-                  key={opt}
-                  style={styles.dropdownMenuItem}
-                  onPress={() => {
-                    onChange(opt);
-                    setOpen(false);
-                  }}
-                >
-                  <Text style={[styles.dropdownMenuItemText, opt === value && styles.dropdownMenuItemTextActive]}>{opt}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </View>
-  );
 }
 
 function StatCard({ icon, color, value, label }: { icon: keyof typeof Ionicons.glyphMap; color: string; value: string | number; label: string }) {
@@ -335,10 +276,9 @@ export function ProfileScreen() {
                 onChangeText={setSearchQuery}
               />
             </View>
-            <Dropdown label="Nível" value={levelFilter} options={levelOptions} onChange={setLevelFilter} />
-            <Dropdown label="Módulo" value={moduleFilter} options={moduleOptions} onChange={setModuleFilter} />
-            <Dropdown
-              label="Ordenar"
+            <OpaqueDropdown value={levelFilter} options={levelOptions} onChange={setLevelFilter} />
+            <OpaqueDropdown value={moduleFilter} options={moduleOptions} onChange={setModuleFilter} />
+            <OpaqueDropdown
               value={sortMode === 'recent' ? 'Mais recentes' : 'Ordem alfabética'}
               options={['Mais recentes', 'Ordem alfabética']}
               onChange={(v) => setSortMode(v === 'Mais recentes' ? 'recent' : 'alpha')}
@@ -573,42 +513,6 @@ const styles = StyleSheet.create({
     height: 42,
   },
   searchInput: { flex: 1, fontFamily: fontFamilies.displayRegular, fontSize: 13, color: authColors.textPrimary, height: '100%' },
-
-  dropdownWrap: { position: 'relative' },
-  dropdownButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: authColors.inputBg,
-    borderWidth: 1,
-    borderColor: authColors.inputBorder,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    height: 42,
-    minWidth: 150,
-  },
-  dropdownButtonText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 12.5, color: authColors.textPrimary, flexShrink: 1 },
-  dropdownMenu: {
-    // top/left/minWidth are set inline per instance (see Dropdown), from
-    // the trigger button's real measured position inside the Modal layer.
-    position: 'absolute',
-    maxHeight: 220,
-    backgroundColor: authColors.pageBgTop,
-    borderWidth: 1,
-    borderColor: authColors.cardBorder,
-    borderRadius: 14,
-    paddingVertical: 6,
-    zIndex: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  dropdownMenuScroll: { maxHeight: 220 },
-  dropdownMenuItem: { paddingVertical: 9, paddingHorizontal: 14 },
-  dropdownMenuItemText: { fontFamily: fontFamilies.displayRegular, fontSize: 13, color: authColors.textSecondary },
-  dropdownMenuItemTextActive: { color: authColors.accentCyan, fontFamily: fontFamilies.displaySemiBold },
 
   table: { minWidth: 760 },
   tableHeaderRow: { flexDirection: 'row', paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: authColors.divider },

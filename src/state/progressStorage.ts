@@ -6,6 +6,9 @@ import { SessionCard } from '../learning/engine';
 /** How many recent attempts to keep, purely to feed the engine's accuracy-based interleave ratio. */
 export const RECENT_ATTEMPTS_CAP = 50;
 
+/** Diamonds are now a single account-wide resource (not reset per lesson) — see ProgressContext's SPEND_DIAMOND handling. */
+export const MAX_DIAMONDS = 5;
+
 /**
  * A lesson interrupted by running out of diamonds (or just backgrounded
  * mid-session) — enough to resume the exact same queue position, life
@@ -48,6 +51,23 @@ export interface ProgressState {
    * diamond recovery), so this only shrinks through real review.
    */
   pendingReviewItemIds: string[];
+  /**
+   * A single account-wide resource (0-5), not reset per lesson. A mistake
+   * in ANY lesson spends one; diamonds only come back once
+   * pendingReviewItemIds is fully cleared out (see ProgressContext) —
+   * matching Prática's "finish everything pending, then get your diamond
+   * back" rule instead of the old per-lesson life count.
+   */
+  diamonds: number;
+  /**
+   * How many pendingReviewItemIds have been resolved since diamonds last
+   * dropped below MAX_DIAMONDS — the numerator for Prática's "8 de 12
+   * concluídos" progress, with the denominator being this plus however
+   * many are still outstanding right now. Reset to 0 once diamonds are
+   * restored, so a fresh mistake later starts a fresh count instead of
+   * carrying stale progress from a previous, already-completed cycle.
+   */
+  diamondRecoveryCleared: number;
 }
 
 export const initialProgressState: ProgressState = {
@@ -62,6 +82,8 @@ export const initialProgressState: ProgressState = {
   recentAttempts: [],
   pendingLesson: null,
   pendingReviewItemIds: [],
+  diamonds: MAX_DIAMONDS,
+  diamondRecoveryCleared: 0,
 };
 
 export async function loadProgress(uid: string): Promise<ProgressState> {

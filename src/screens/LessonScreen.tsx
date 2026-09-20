@@ -27,13 +27,12 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Lesson'>;
 /** How many of a session's misses on the same item trigger a same-session reinforcement card. */
 const MICRO_REVIEW_THRESHOLD = 2;
 const MICRO_REVIEW_MAX_PER_SESSION = 3;
-const MAX_LIVES = 5;
 
 export function LessonScreen({ route, navigation }: Props) {
   const { lessonId } = route.params;
   const lesson =
     lessonId === DYNAMIC_REVIEW_LESSON_ID ? getCachedReviewLesson()! : findLessonById(units, lessonId)!;
-  const { progress, completeLesson, savePendingLesson, markPendingReview } = useProgress();
+  const { progress, completeLesson, savePendingLesson, markPendingReview, spendDiamond } = useProgress();
   const styles = useMemo(() => makeLessonChromeStyles(), []);
   const { onStageLayout, onNaturalLayout, scale } = useAutoFitScale();
   // Width is handled responsively (shrinks with the viewport on narrow
@@ -82,7 +81,6 @@ export function LessonScreen({ route, navigation }: Props) {
 
   const [currentIndex, setCurrentIndex] = useState(pending?.currentIndex ?? 0);
   const [mistakes, setMistakes] = useState(pending?.mistakes ?? 0);
-  const [lives, setLives] = useState(pending?.lives ?? MAX_LIVES);
   const [missedItemIds, setMissedItemIds] = useState<string[]>(pending?.missedItemIds ?? []);
   const attemptsRef = useRef<AttemptResult[]>(pending?.attempts ?? []);
   const missedCountRef = useRef<Record<string, number>>({});
@@ -149,21 +147,22 @@ export function LessonScreen({ route, navigation }: Props) {
       if (nextQueue !== queue) setQueue(nextQueue);
     }
 
-    // Diamonds: lost on any missed question (same "hadMistake" signal the
-    // mistake counter already uses), never on a micro-review re-test — that
-    // would charge twice for the same underlying miss, since micro-review
-    // only exists because the miss was already counted once. Every missed
-    // item — deduped — feeds diamond recovery below, same items the
-    // existing SRS pipeline will separately schedule for later review once
-    // this lesson actually completes.
-    let newLives = lives;
+    // Diamonds: a single account-wide resource now (see ProgressContext's
+    // SPEND_DIAMOND), lost on any missed question (same "hadMistake" signal
+    // the mistake counter already uses), never on a micro-review re-test —
+    // that would charge twice for the same underlying miss, since
+    // micro-review only exists because the miss was already counted once.
+    // `newLives` is computed locally (not read back from `progress` after
+    // dispatching) purely for this handler's own control flow below —
+    // dispatch doesn't update `progress` synchronously within this call.
+    let newLives = progress.diamonds;
     let newMissedItemIds = missedItemIds;
     if (diamondsEnabled && hadMistake && !card.isMicroReview) {
-      newLives = Math.max(0, lives - 1);
+      newLives = Math.max(0, progress.diamonds - 1);
+      spendDiamond();
       const missedIds = outcome.itemResults.filter((r) => !r.correct).map((r) => r.itemId);
       const toAdd = missedIds.filter((id) => !missedItemIds.includes(id));
       newMissedItemIds = toAdd.length > 0 ? [...missedItemIds, ...toAdd] : missedItemIds;
-      setLives(newLives);
       setMissedItemIds(newMissedItemIds);
     }
 
@@ -233,7 +232,7 @@ export function LessonScreen({ route, navigation }: Props) {
                 </Text>
               </View>
 
-              {diamondsEnabled ? <PremiumDiamondRow lives={lives} /> : <View />}
+              {diamondsEnabled ? <PremiumDiamondRow lives={progress.diamonds} /> : <View />}
             </View>
 
             <View style={[styles.examCard, { width: contentWidth }]}>

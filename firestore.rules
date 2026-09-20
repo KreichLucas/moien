@@ -20,7 +20,11 @@ service cloud.firestore {
         && request.resource.data.recentAttempts is list
         && request.resource.data.recentAttempts.size() <= 50
         && (request.resource.data.pendingLesson == null || request.resource.data.pendingLesson is map)
-        && request.resource.data.pendingReviewItemIds is list;
+        && request.resource.data.pendingReviewItemIds is list
+        && request.resource.data.diamonds is int
+        && request.resource.data.diamonds >= 0 && request.resource.data.diamonds <= 5
+        && request.resource.data.diamondRecoveryCleared is int
+        && request.resource.data.diamondRecoveryCleared >= 0;
     }
 
     // Profile photo, kept separate from `progress/{uid}` (see

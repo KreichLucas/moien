@@ -12,17 +12,24 @@ import { pickNextRecoveryExercise } from '../learning/reviewSession';
 import { EXERCISE_INDEX, ITEM_REGISTRY } from '../learning/registry';
 import { ExerciseOutcome } from '../learning/types';
 import { RootStackParamList } from '../navigation/types';
+import { MAX_DIAMONDS } from '../state/progressStorage';
 import { useProgress } from '../state/ProgressContext';
 import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
 import { playComplete, playCorrect, playWrong } from '../utils/sounds';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'DiamondRecovery'>;
 
-const MAX_LIVES = 5;
-
+/**
+ * Diamonds are a single account-wide resource now (see ProgressContext) —
+ * they only come back once the WHOLE pendingReviewItemIds backlog is
+ * cleared, not per correct answer here. This screen still exists (rather
+ * than just redirecting straight to the Prática tab) so a learner who ran
+ * out mid-lesson can clear that backlog and land right back in the exact
+ * lesson they paused, instead of having to find their way back manually.
+ */
 export function DiamondRecoveryScreen({ route, navigation }: Props) {
   const { lessonId } = route.params;
-  const { progress, recordPracticeAttempts, savePendingLesson } = useProgress();
+  const { progress, recordPracticeAttempts } = useProgress();
   const colors = useTheme();
   const styles = useMemo(() => makeStyles(colors), [colors]);
 
@@ -30,14 +37,13 @@ export function DiamondRecoveryScreen({ route, navigation }: Props) {
   const [cursor, setCursor] = useState(0);
   const [round, setRound] = useState(0);
 
-  const lives = pending?.lives ?? 0;
-  const missedItemIds = pending?.missedItemIds ?? [];
-  const recovered = lives >= MAX_LIVES;
+  const pendingReviewItemIds = progress.pendingReviewItemIds;
+  const recovered = progress.diamonds >= MAX_DIAMONDS || pendingReviewItemIds.length === 0;
 
   const next = useMemo(() => {
-    if (recovered || missedItemIds.length === 0) return null;
-    return pickNextRecoveryExercise(missedItemIds, cursor, ITEM_REGISTRY, EXERCISE_INDEX, progress.itemMastery);
-  }, [cursor, missedItemIds, progress.itemMastery, recovered]);
+    if (recovered) return null;
+    return pickNextRecoveryExercise(pendingReviewItemIds, cursor, ITEM_REGISTRY, EXERCISE_INDEX, progress.itemMastery);
+  }, [cursor, pendingReviewItemIds, progress.itemMastery, recovered]);
 
   if (!pending) {
     // No paused lesson to recover into (e.g. deep-linked directly, or it
@@ -54,11 +60,9 @@ export function DiamondRecoveryScreen({ route, navigation }: Props) {
     if (gotTargetRight) playCorrect();
     else playWrong();
 
-    const newLives = Math.min(MAX_LIVES, lives + (gotTargetRight ? 1 : 0));
-    savePendingLesson({ ...pending, lives: newLives });
-
-    if (newLives >= MAX_LIVES) playComplete();
-    setCursor((c) => (c + 1) % missedItemIds.length);
+    const remainingAfterThis = pendingReviewItemIds.length - (gotTargetRight ? 1 : 0);
+    if (remainingAfterThis <= 0) playComplete();
+    setCursor((c) => (remainingAfterThis > 0 ? (c + 1) % remainingAfterThis : 0));
     setRound((r) => r + 1);
   };
 
@@ -72,7 +76,7 @@ export function DiamondRecoveryScreen({ route, navigation }: Props) {
         <Pressable onPress={() => navigation.replace('Main')}>
           <Text style={styles.close}>✕</Text>
         </Pressable>
-        <DiamondRow lives={lives} />
+        <DiamondRow lives={progress.diamonds} />
       </View>
 
       {recovered ? (
@@ -87,6 +91,10 @@ export function DiamondRecoveryScreen({ route, navigation }: Props) {
         </View>
       ) : next ? (
         <>
+          <Text style={styles.progressHint}>
+            Faltam {pendingReviewItemIds.length} {pendingReviewItemIds.length === 1 ? 'palavra' : 'palavras'} para recuperar seus
+            diamantes
+          </Text>
           {next.exercise.type === 'multipleChoice' && (
             <ExerciseMultipleChoice key={`${round}-${next.exercise.id}`} exercise={next.exercise} onComplete={handleComplete} />
           )}
@@ -127,6 +135,7 @@ function makeStyles(colors: ThemeColors) {
       paddingBottom: 12,
     },
     close: { fontSize: 22, color: colors.textSecondary, fontWeight: '600' },
+    progressHint: { fontSize: 13, color: colors.textSecondary, textAlign: 'center', marginBottom: 8 },
     recoveredWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
     recoveredEmoji: { fontSize: 72, marginBottom: 16 },
     recoveredTitle: { fontSize: 22, fontWeight: '800', color: colors.text, marginBottom: 10, textAlign: 'center' },
