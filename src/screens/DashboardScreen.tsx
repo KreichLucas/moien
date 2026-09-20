@@ -109,10 +109,6 @@ export function DashboardScreen() {
               <Text style={styles.statPillLabel}>dias seguidos</Text>
             </View>
             <View style={styles.statPill}>
-              <Text style={styles.statPillValue}>💎 0</Text>
-              <Text style={styles.statPillLabel}>diamantes</Text>
-            </View>
-            <View style={styles.statPill}>
               <Text style={styles.statPillValue}>⭐ {progress.xp}</Text>
               <Text style={styles.statPillLabel}>XP total</Text>
             </View>
