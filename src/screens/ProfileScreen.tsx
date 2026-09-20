@@ -1,10 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Image, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions, StyleSheet } from 'react-native';
 import { ChangePasswordModal } from '../components/ChangePasswordModal';
 import { PhotoConsentModal } from '../components/PhotoConsentModal';
+import { UserAvatar } from '../components/UserAvatar';
 import { getLevelProgress } from '../content/levels';
 import { units } from '../content/units';
 import { computeCourseMetrics } from '../learning/metrics';
@@ -12,7 +13,6 @@ import { ITEM_REGISTRY } from '../learning/registry';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
 import { useProgress } from '../state/ProgressContext';
-import { deleteProfilePhoto, loadProfilePhoto, saveProfilePhoto } from '../state/profilePhotoStorage';
 import { pickAndResizeProfilePhoto } from '../utils/pickProfilePhoto';
 import { authColors, fontFamilies } from './authStyles';
 
@@ -112,12 +112,11 @@ function MasteryCard({ icon, color, pct, label }: { icon: keyof typeof Ionicons.
 
 export function ProfileScreen() {
   const navigation = useNavigation<Nav>();
-  const { user } = useAuth();
+  const { user, profilePhotoUrl, updateProfilePhoto } = useAuth();
   const { progress } = useProgress();
   const { width } = useWindowDimensions();
   const isNarrow = width < 900;
 
-  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [pendingPhotoUri, setPendingPhotoUri] = useState<string | null>(null);
   const [consentVisible, setConsentVisible] = useState(false);
   const [changePasswordVisible, setChangePasswordVisible] = useState(false);
@@ -127,17 +126,6 @@ export function ProfileScreen() {
   const [levelFilter, setLevelFilter] = useState(ALL_LEVELS);
   const [moduleFilter, setModuleFilter] = useState(ALL_MODULES);
   const [sortMode, setSortMode] = useState<SortMode>('recent');
-
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    loadProfilePhoto(user.uid).then((url) => {
-      if (!cancelled) setPhotoDataUrl(url);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.uid]);
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuário';
   const hasPasswordProvider = user?.providerData.some((p) => p.providerId === 'password') ?? false;
@@ -205,28 +193,21 @@ export function ProfileScreen() {
   };
 
   const handleConfirmPhoto = async () => {
-    if (!user || !pendingPhotoUri) return;
+    if (!pendingPhotoUri) return;
     const newUrl = pendingPhotoUri;
     setConsentVisible(false);
     setPendingPhotoUri(null);
-    const previous = photoDataUrl;
-    setPhotoDataUrl(newUrl);
     try {
-      await saveProfilePhoto(user.uid, newUrl);
+      await updateProfilePhoto(newUrl);
     } catch {
-      setPhotoDataUrl(previous);
       setPhotoError('Não foi possível salvar sua foto agora. Tente novamente.');
     }
   };
 
   const handleRemovePhoto = async () => {
-    if (!user) return;
-    const previous = photoDataUrl;
-    setPhotoDataUrl(null);
     try {
-      await deleteProfilePhoto(user.uid);
+      await updateProfilePhoto(null);
     } catch {
-      setPhotoDataUrl(previous);
       setPhotoError('Não foi possível remover sua foto agora. Tente novamente.');
     }
   };
@@ -240,13 +221,9 @@ export function ProfileScreen() {
         <View style={[styles.topCard, isNarrow && styles.topCardNarrow]}>
           <View style={styles.profileBlock}>
             <View style={styles.avatarWrap}>
-              {photoDataUrl ? (
-                <Image source={{ uri: photoDataUrl }} style={styles.avatarImage} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Ionicons name="person" size={38} color={authColors.accentCyan} />
-                </View>
-              )}
+              <UserAvatar style={styles.avatarCircle}>
+                <Ionicons name="person" size={38} color={authColors.accentCyan} />
+              </UserAvatar>
               <Pressable style={styles.avatarEditButton} onPress={handlePickPhoto} hitSlop={6}>
                 <Ionicons name="pencil" size={13} color="#FFFFFF" />
               </Pressable>
@@ -254,7 +231,7 @@ export function ProfileScreen() {
             <View style={styles.profileNameBlock}>
               <Text style={styles.userName}>{displayName}</Text>
               <Text style={styles.userEmail}>{user?.email}</Text>
-              {photoDataUrl && (
+              {profilePhotoUrl && (
                 <Pressable onPress={handleRemovePhoto} hitSlop={6}>
                   <Text style={styles.removePhotoLink}>Remover foto</Text>
                 </Pressable>
@@ -437,14 +414,7 @@ const styles = StyleSheet.create({
 
   profileBlock: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 18, minWidth: 260 },
   avatarWrap: { width: 92, height: 92 },
-  avatarImage: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    borderWidth: 2,
-    borderColor: authColors.accentCyan,
-  },
-  avatarPlaceholder: {
+  avatarCircle: {
     width: 92,
     height: 92,
     borderRadius: 46,

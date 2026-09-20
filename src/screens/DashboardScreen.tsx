@@ -4,6 +4,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo, useState } from 'react';
 import { ImageBackground, Platform, Pressable, ScrollView, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { UserAvatar } from '../components/UserAvatar';
 import { getPhraseOfTheDay } from '../content/dailyPhrases';
 import { LEVEL_LABELS, getLevelProgress } from '../content/levels';
 import { getNextLessonForUnit } from '../content/path';
@@ -125,9 +126,9 @@ export function DashboardScreen() {
                 onHoverIn={onHoverIn('profilePill')}
                 onHoverOut={onHoverOut('profilePill')}
               >
-                <View style={styles.profileAvatar}>
+                <UserAvatar style={styles.profileAvatar}>
                   <Text style={styles.profileAvatarText}>{initials}</Text>
-                </View>
+                </UserAvatar>
                 <Text style={styles.profilePillName}>Olá, {displayName}!</Text>
                 <Ionicons name={profileMenuOpen ? 'chevron-up' : 'chevron-down'} size={14} color={authColors.textSecondary} />
               </Pressable>

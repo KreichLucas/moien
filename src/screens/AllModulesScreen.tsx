@@ -3,6 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { UserAvatar } from '../components/UserAvatar';
 import { ModuleCatalogEntry, MODULE_CATALOG_A1 } from '../content/moduleCatalogA1';
 import { getNextLessonForUnit } from '../content/path';
 import { units } from '../content/units';
@@ -95,9 +96,9 @@ export function AllModulesScreen({ navigation }: Props) {
                   onHoverIn={() => setHoveredId('profilePill')}
                   onHoverOut={() => setHoveredId((id) => (id === 'profilePill' ? null : id))}
                 >
-                  <View style={styles.profileAvatar}>
+                  <UserAvatar style={styles.profileAvatar}>
                     <Text style={styles.profileAvatarText}>{initials}</Text>
-                  </View>
+                  </UserAvatar>
                   <Text style={styles.profilePillName}>Olá, {displayName}!</Text>
                   <Ionicons name={profileMenuOpen ? 'chevron-up' : 'chevron-down'} size={14} color={authColors.textSecondary} />
                 </Pressable>

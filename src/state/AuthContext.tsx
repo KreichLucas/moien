@@ -13,6 +13,7 @@ import {
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../firebase/firebaseConfig';
+import { deleteProfilePhoto, loadProfilePhoto, saveProfilePhoto } from './profilePhotoStorage';
 
 export function mapAuthError(code: string): string {
   switch (code) {
@@ -52,6 +53,17 @@ interface AuthContextValue {
   signOutUser: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   clearAuthError: () => void;
+  /**
+   * The single source of truth for the user's profile photo — every avatar
+   * in the app (dashboard header, module pages, Perfil itself) reads this
+   * instead of loading/holding its own copy, so a change here is instantly
+   * reflected everywhere. `undefined` while the initial load from Firestore
+   * hasn't resolved yet (avoids a flash of the fallback initials before a
+   * saved photo has had a chance to arrive); `null` once resolved with no
+   * photo saved.
+   */
+  profilePhotoUrl: string | null | undefined;
+  updateProfilePhoto: (dataUrl: string | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -60,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [profilePhotoUrl, setProfilePhotoUrl] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
@@ -68,6 +81,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     return unsubscribe;
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setProfilePhotoUrl(undefined);
+      return;
+    }
+    let cancelled = false;
+    setProfilePhotoUrl(undefined);
+    loadProfilePhoto(user.uid).then((url) => {
+      if (!cancelled) setProfilePhotoUrl(url);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.uid]);
 
   const signIn = async (email: string, password: string) => {
     setAuthError(null);
@@ -122,9 +150,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const clearAuthError = () => setAuthError(null);
 
+  // Persists to Firestore first, then flips the shared state — every
+  // avatar reading `profilePhotoUrl` re-renders with the new value (or the
+  // fallback, for `null`) the moment this resolves, with no per-screen
+  // wiring needed. Callers (Perfil's upload/remove actions) handle their
+  // own optimistic UI / error messaging around the await.
+  const updateProfilePhoto = async (dataUrl: string | null) => {
+    if (!user) return;
+    if (dataUrl) {
+      await saveProfilePhoto(user.uid, dataUrl);
+    } else {
+      await deleteProfilePhoto(user.uid);
+    }
+    setProfilePhotoUrl(dataUrl);
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, isAuthLoading, authError, signIn, signUp, signInWithGoogle, signOutUser, changePassword, clearAuthError }}
+      value={{
+        user,
+        isAuthLoading,
+        authError,
+        signIn,
+        signUp,
+        signInWithGoogle,
+        signOutUser,
+        changePassword,
+        clearAuthError,
+        profilePhotoUrl,
+        updateProfilePhoto,
+      }}
     >
       {children}
     </AuthContext.Provider>
