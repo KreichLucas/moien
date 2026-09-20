@@ -2,11 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { PremiumDiamondRow } from '../components/PremiumDiamondRow';
 import { ProgressBar } from '../components/ProgressBar';
 import { RootStackParamList } from '../navigation/types';
-import { useAuth } from '../state/AuthContext';
 import { useProgress } from '../state/ProgressContext';
 import { useAnimatedNumber } from '../utils/useAnimatedNumber';
 import { useAutoFitScale } from '../utils/useAutoFitScale';
@@ -26,7 +25,6 @@ function formatDuration(totalSeconds: number): string {
 
 export function ResultScreen({ route, navigation }: Props) {
   const { xpEarned, correctCount, totalCount, elapsedSeconds, lives, unitTitle, lessonTitle } = route.params;
-  const { user, signOutUser } = useAuth();
   const { progress } = useProgress();
   const { width } = useWindowDimensions();
   const isNarrow = width < 720;
@@ -34,14 +32,7 @@ export function ResultScreen({ route, navigation }: Props) {
   const styles = useMemo(() => makeStyles(), []);
   const { onStageLayout, onNaturalLayout, scale } = useAutoFitScale();
   const animatedXp = useAnimatedNumber(xpEarned, 900, { animateFrom: 0 });
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-
-  const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuário';
-  const initials = (displayName.match(/\S+/g) ?? [])
-    .slice(0, 2)
-    .map((s) => s[0]?.toUpperCase())
-    .join('') || 'U';
 
   // Lesson titles look like "Barra 1 · Introdução" — only the "Barra N" part
   // reads naturally in "Você completou a Barra 1 de Saudações."
@@ -58,64 +49,8 @@ export function ResultScreen({ route, navigation }: Props) {
       <View style={styles.stage} onLayout={onStageLayout}>
       <View onLayout={onNaturalLayout}>
       <View style={[styles.scaleContent, { transform: [{ scale }] }]}>
-      <View style={[styles.header, { width: contentWidth }]}>
-        <View style={styles.topRow}>
-          <View>
-            {/* eslint-disable-next-line @typescript-eslint/no-require-imports */}
-            <Image source={require('../../assets/moien-logo-3d.png')} style={styles.logo} resizeMode="contain" />
-            <Text style={styles.tagline}>Aprenda Luxemburguês{'\n'}de um jeito real</Text>
-          </View>
-
-          <View style={styles.topRightRow}>
-            <View style={styles.streakPill}>
-              <Text style={styles.streakValue}>🔥 {progress.streak}</Text>
-              <Text style={styles.streakLabel}>dias seguidos</Text>
-            </View>
-
-            <View style={styles.profilePillWrap}>
-              <Pressable
-                style={({ pressed }) => [styles.profilePill, liftStyle(hoveredId === 'profilePill', 999, pressed)]}
-                onPress={() => setProfileMenuOpen((o) => !o)}
-                onHoverIn={() => setHoveredId('profilePill')}
-                onHoverOut={() => setHoveredId((id) => (id === 'profilePill' ? null : id))}
-              >
-                <View style={styles.profileAvatar}>
-                  <Text style={styles.profileAvatarText}>{initials}</Text>
-                </View>
-                <Text style={styles.profilePillName}>Olá, {displayName}!</Text>
-                <Ionicons name={profileMenuOpen ? 'chevron-up' : 'chevron-down'} size={14} color={authColors.textSecondary} />
-              </Pressable>
-              {profileMenuOpen && (
-                <View style={styles.profileMenu}>
-                  <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-perfil', 10, pressed)]}
-                    onPress={() => {
-                      setProfileMenuOpen(false);
-                      navigation.navigate('Main', { screen: 'Profile' });
-                    }}
-                    onHoverIn={() => setHoveredId('menu-perfil')}
-                    onHoverOut={() => setHoveredId((id) => (id === 'menu-perfil' ? null : id))}
-                  >
-                    <Text style={styles.profileMenuItemText}>Perfil</Text>
-                  </Pressable>
-                  <Pressable
-                    style={({ pressed }) => [styles.profileMenuItem, liftStyle(hoveredId === 'menu-sair', 10, pressed)]}
-                    onPress={() => {
-                      setProfileMenuOpen(false);
-                      signOutUser();
-                    }}
-                    onHoverIn={() => setHoveredId('menu-sair')}
-                    onHoverOut={() => setHoveredId((id) => (id === 'menu-sair' ? null : id))}
-                  >
-                    <Text style={[styles.profileMenuItemText, styles.profileMenuDanger]}>Sair</Text>
-                  </Pressable>
-                </View>
-              )}
-            </View>
-          </View>
-        </View>
-
-        <View style={[styles.bottomRow, isNarrow && styles.bottomRowNarrow]}>
+      <View style={[styles.header, isNarrow && styles.headerNarrow, { width: contentWidth }]}>
+        <View style={[styles.headerSide, isNarrow && styles.headerSideNarrow]}>
           <Pressable
             onPress={handleContinue}
             onHoverIn={() => setHoveredId('backLink')}
@@ -125,39 +60,28 @@ export function ResultScreen({ route, navigation }: Props) {
             <Ionicons name="arrow-back" size={16} color={authColors.textPrimary} />
             <Text style={styles.backLinkText}>Voltar ao módulo</Text>
           </Pressable>
+        </View>
 
-          <View style={[styles.centerColumn, isNarrow && styles.centerColumnNarrow]}>
-            {unitTitle && (
-              <View style={styles.breadcrumb}>
-                <Text style={styles.breadcrumbUnit}>{unitTitle}</Text>
-                <Text style={styles.breadcrumbSeparator}>•</Text>
-                <Text style={styles.breadcrumbLesson}>{lessonTitle}</Text>
-              </View>
-            )}
-            <ProgressBar current={totalCount} total={totalCount} />
-            <Text style={styles.exerciseCounter}>
-              {totalCount} de {totalCount}
-            </Text>
+        <View style={[styles.centerColumn, isNarrow && styles.centerColumnNarrow]}>
+          {unitTitle && (
+            <View style={styles.breadcrumb}>
+              <Text style={styles.breadcrumbUnit}>{unitTitle}</Text>
+              <Text style={styles.breadcrumbSeparator}>•</Text>
+              <Text style={styles.breadcrumbLesson}>{lessonTitle}</Text>
+            </View>
+          )}
+          <ProgressBar current={totalCount} total={totalCount} />
+          <Text style={styles.exerciseCounter}>
+            {totalCount} de {totalCount}
+          </Text>
+        </View>
+
+        <View style={[styles.headerSide, styles.headerSideRight, isNarrow && styles.headerSideNarrow]}>
+          <View style={styles.streakPill}>
+            <Text style={styles.streakValue}>🔥 {progress.streak}</Text>
+            <Text style={styles.streakLabel}>dias seguidos</Text>
           </View>
-
-          {/* `gap` on `bottomRowNarrow` alone left `centerColumn` and this row
-              touching (its own height under-reports vs. its rendered content
-              once stacked in a column) — a hard spacer guarantees a real gap
-              no matter what that measurement does. */}
-          {isNarrow && <View style={styles.narrowRowSpacer} />}
-
-          <View style={styles.rightRow}>
-            <PremiumDiamondRow lives={lives} />
-            <Pressable
-              onPress={() => navigation.navigate('Settings')}
-              onHoverIn={() => setHoveredId('settings')}
-              onHoverOut={() => setHoveredId((id) => (id === 'settings' ? null : id))}
-              style={({ pressed }) => [styles.settingsButton, liftStyle(hoveredId === 'settings', 12, pressed)]}
-            >
-              <Ionicons name="settings-outline" size={16} color={authColors.textPrimary} />
-              <Text style={styles.settingsText}>Configurações</Text>
-            </Pressable>
-          </View>
+          <PremiumDiamondRow lives={lives} />
         </View>
       </View>
 
@@ -249,15 +173,22 @@ function makeStyles() {
     // against this box's own size, same technique as the lesson screen.
     stage: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 16 },
     scaleContent: { alignItems: 'center', gap: 18 },
+    // A single balanced row now that the logo, profile pill and
+    // Configurações button are gone — three even zones (back link / lesson
+    // progress / streak+diamonds) fill the width instead of two sparse
+    // rows with dead space where those removed elements used to sit.
     header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
       paddingTop: 4,
-      paddingBottom: 16,
-      gap: 16,
+      paddingBottom: 20,
+      gap: 20,
     },
-    topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 },
-    logo: { width: 140, height: 46 },
-    tagline: { fontFamily: fontFamilies.displayRegular, fontSize: 11, color: 'rgba(255,255,255,0.75)', marginTop: 4, lineHeight: 15 },
-    topRightRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    headerNarrow: { flexDirection: 'column', gap: 20 },
+    headerSide: { flex: 1, flexDirection: 'row', alignItems: 'center' },
+    headerSideRight: { justifyContent: 'flex-end', gap: 16 },
+    headerSideNarrow: { flex: 0, width: '100%', justifyContent: 'center' },
     streakPill: {
       alignItems: 'center',
       backgroundColor: 'rgba(13, 25, 48, 0.55)',
@@ -269,79 +200,16 @@ function makeStyles() {
     },
     streakValue: { fontFamily: fontFamilies.displayBold, fontSize: 15, color: '#FFFFFF' },
     streakLabel: { fontFamily: fontFamilies.displayRegular, fontSize: 10, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
-    profilePillWrap: { position: 'relative' },
-    profilePill: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      backgroundColor: 'rgba(13, 25, 48, 0.55)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      borderRadius: 999,
-      paddingVertical: 6,
-      paddingHorizontal: 10,
-      paddingRight: 14,
-    },
-    profileAvatar: {
-      width: 30,
-      height: 30,
-      borderRadius: 15,
-      backgroundColor: authColors.accentBlue,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    profileAvatarText: { color: '#FFFFFF', fontFamily: fontFamilies.displayBold, fontSize: 12 },
-    profilePillName: { fontFamily: fontFamilies.displaySemiBold, fontSize: 13, color: '#FFFFFF' },
-    profileMenu: {
-      position: 'absolute',
-      top: 48,
-      right: 0,
-      width: 160,
-      backgroundColor: authColors.cardBg,
-      borderWidth: 1,
-      borderColor: authColors.cardBorder,
-      borderRadius: 14,
-      paddingVertical: 6,
-      zIndex: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.4,
-      shadowRadius: 16,
-      elevation: 10,
-    },
-    profileMenuItem: { paddingVertical: 10, paddingHorizontal: 16 },
-    profileMenuItemText: { fontFamily: fontFamilies.displayRegular, fontSize: 13, color: authColors.textPrimary },
-    profileMenuDanger: { color: authColors.danger },
 
-    bottomRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 },
-    // Below the breakpoint, a wrapped flex-row's second line can overlap
-    // whatever comes after it in RN Web — stacking into a column instead
-    // gives every block its own row so the header's total height is always
-    // correct and the card below never overlaps it.
-    bottomRowNarrow: { flexDirection: 'column', alignItems: 'center', gap: 20 },
     backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 4 },
     backLinkText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 14, color: '#FFFFFF' },
-    centerColumn: { flex: 1, minWidth: 200, alignItems: 'center', gap: 6 },
+    centerColumn: { flex: 1.4, minWidth: 200, alignItems: 'center', gap: 6 },
     centerColumnNarrow: { flex: 0, width: '100%' },
-    narrowRowSpacer: { height: 16 },
     breadcrumb: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     breadcrumbUnit: { fontFamily: fontFamilies.displayBold, fontSize: 14, color: '#FFFFFF' },
     breadcrumbSeparator: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: 'rgba(255,255,255,0.6)' },
     breadcrumbLesson: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: 'rgba(255,255,255,0.75)' },
     exerciseCounter: { fontFamily: fontFamilies.displayRegular, fontSize: 12, color: 'rgba(255,255,255,0.6)' },
-    rightRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-    settingsButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      backgroundColor: 'rgba(13, 25, 48, 0.55)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.15)',
-      borderRadius: 12,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-    },
-    settingsText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 13, color: '#FFFFFF' },
 
     card: {
       backgroundColor: 'rgba(10, 24, 56, 0.6)',
