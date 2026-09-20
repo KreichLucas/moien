@@ -15,6 +15,8 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AllModules'>;
 
 type LevelTabId = 'A1' | 'A1+' | 'A2' | 'A2+' | 'B1' | 'B1+';
 
+const GRID_GAP = 16;
+
 const LEVEL_TABS: { id: LevelTabId; label: string }[] = [
   { id: 'A1', label: 'A1' },
   { id: 'A1+', label: 'A1 Avançado' },
@@ -30,6 +32,15 @@ export function AllModulesScreen({ navigation }: Props) {
   const { width } = useWindowDimensions();
   const isNarrow = width < 720;
   const styles = useMemo(() => makeStyles(), []);
+  // Fixed per-card width instead of flexGrow: with flexGrow, a last row
+  // that ends up with fewer cards than the rows above it (e.g. only 2 of
+  // the 20 modules left over) stretches those leftover cards to fill the
+  // whole row, making them visibly bigger than every other card. A fixed
+  // width computed from the actual column count never stretches, so every
+  // card — including a lone one on the last row — stays the same size.
+  const gridColumns = width >= 1300 ? 4 : width >= 1000 ? 3 : width >= 680 ? 2 : 1;
+  const gridContentWidth = Math.min(width, 1600) - 28 * 2;
+  const cardWidth = (gridContentWidth - GRID_GAP * (gridColumns - 1)) / gridColumns;
   const [activeTab, setActiveTab] = useState<LevelTabId>('A1');
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -211,6 +222,7 @@ export function AllModulesScreen({ navigation }: Props) {
                   onHoverOut={() => setHoveredId((id) => (id === `module-${entry.order}` ? null : id))}
                   onPress={unit ? () => handleModulePress(unit) : undefined}
                   styles={styles}
+                  cardWidth={cardWidth}
                 />
               ))}
             </View>
@@ -238,6 +250,7 @@ function ModuleCard({
   onHoverOut,
   onPress,
   styles,
+  cardWidth,
 }: {
   entry: ModuleCatalogEntry;
   completedLessons: number;
@@ -248,6 +261,7 @@ function ModuleCard({
   onHoverOut: () => void;
   onPress?: () => void;
   styles: ReturnType<typeof makeStyles>;
+  cardWidth: number;
 }) {
   const isLocked = !onPress;
   const pct = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
@@ -260,6 +274,7 @@ function ModuleCard({
       onHoverOut={isLocked ? undefined : onHoverOut}
       style={({ pressed }) => [
         styles.card,
+        { width: cardWidth },
         isComplete && styles.cardComplete,
         isLocked && styles.cardLocked,
         !isLocked && liftStyle(isHovered, 20, pressed),
@@ -413,16 +428,14 @@ function makeStyles() {
     sectionProgressFill: { height: '100%', borderRadius: 4, backgroundColor: authColors.accentCyan },
     sectionProgressPct: { fontFamily: fontFamilies.displayBold, fontSize: 13, color: authColors.textPrimary },
 
-    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
+    grid: { flexDirection: 'row', flexWrap: 'wrap', gap: GRID_GAP },
     card: {
-      flexGrow: 1,
-      // flexBasis controls how many columns wrap per row (~4 at typical
-      // desktop widths); maxWidth only caps how far flexGrow can stretch
-      // each card to fill the row — raised so 4 cards actually reach the
-      // row's full width instead of stopping short and leaving a gap on
-      // the right, without letting cards blow up on ultra-wide screens.
-      flexBasis: 300,
-      maxWidth: 420,
+      // Width is set inline per-card (`cardWidth`, computed from the actual
+      // column count) instead of flexGrow/flexBasis — flexGrow would let a
+      // short last row (e.g. only 2 modules left over) stretch those cards
+      // to fill the whole row, making them bigger than every other card.
+      flexGrow: 0,
+      flexShrink: 0,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 14,
