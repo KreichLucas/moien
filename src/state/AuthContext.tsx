@@ -1,17 +1,20 @@
 import {
+  EmailAuthProvider,
   GoogleAuthProvider,
   User,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updatePassword,
   updateProfile,
 } from 'firebase/auth';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth } from '../firebase/firebaseConfig';
 
-function mapAuthError(code: string): string {
+export function mapAuthError(code: string): string {
   switch (code) {
     case 'auth/invalid-email':
       return 'E-mail inválido.';
@@ -32,6 +35,8 @@ function mapAuthError(code: string): string {
       return '';
     case 'auth/popup-blocked':
       return 'O navegador bloqueou a janela de login. Permita pop-ups para este site e tente de novo.';
+    case 'auth/requires-recent-login':
+      return 'Por segurança, confirme sua senha atual novamente.';
     default:
       return 'Algo deu errado. Tente novamente.';
   }
@@ -45,6 +50,7 @@ interface AuthContextValue {
   signUp: (email: string, password: string, name: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOutUser: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   clearAuthError: () => void;
 }
 
@@ -103,11 +109,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signOut(auth);
   };
 
+  // Firebase requires a recent sign-in before allowing a password change —
+  // re-authenticating with the current password satisfies that (and, as a
+  // side effect, is also how we verify the user actually knows it).
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const current = auth.currentUser;
+    if (!current?.email) throw new Error('no-authenticated-user');
+    const credential = EmailAuthProvider.credential(current.email, currentPassword);
+    await reauthenticateWithCredential(current, credential);
+    await updatePassword(current, newPassword);
+  };
+
   const clearAuthError = () => setAuthError(null);
 
   return (
     <AuthContext.Provider
-      value={{ user, isAuthLoading, authError, signIn, signUp, signInWithGoogle, signOutUser, clearAuthError }}
+      value={{ user, isAuthLoading, authError, signIn, signUp, signInWithGoogle, signOutUser, changePassword, clearAuthError }}
     >
       {children}
     </AuthContext.Provider>

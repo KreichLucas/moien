@@ -20,6 +20,7 @@ import { LessonScreen } from '../screens/LessonScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { OutOfDiamondsScreen } from '../screens/OutOfDiamondsScreen';
 import { PracticeScreen } from '../screens/PracticeScreen';
+import { PrivacyPolicyScreen } from '../screens/PrivacyPolicyScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { ResultScreen } from '../screens/ResultScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
@@ -170,6 +171,7 @@ export function RootNavigator() {
           <Stack.Screen name="DiamondRecovery" component={DiamondRecoveryScreen} options={{ presentation: 'fullScreenModal', gestureEnabled: false }} />
           <Stack.Screen name="Learn" component={HomeScreen} />
           <Stack.Screen name="AllModules" component={AllModulesScreen} />
+          <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ presentation: 'modal' }} />
         </Stack.Navigator>
       ) : (
         <AuthStack.Navigator screenOptions={{ headerShown: false }}>

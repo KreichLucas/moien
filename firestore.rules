@@ -22,5 +22,21 @@ service cloud.firestore {
         && (request.resource.data.pendingLesson == null || request.resource.data.pendingLesson is map)
         && request.resource.data.pendingReviewItemIds is list;
     }
+
+    // Profile photo, kept separate from `progress/{uid}` (see
+    // src/state/profilePhotoStorage.ts). Read is any signed-in user, since
+    // a profile photo is meant to be visible wherever a user's profile is
+    // shown to others, not just to its owner — write/delete stay
+    // owner-only. `dataUrl` is capped well under Firestore's 1MB document
+    // limit; the client already downsizes the image before ever writing it,
+    // this is a defensive backstop, not the primary size control.
+    match /profilePhotos/{uid} {
+      allow read: if request.auth != null;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.dataUrl is string
+        && request.resource.data.dataUrl.size() < 400000;
+    }
   }
 }

@@ -18,6 +18,7 @@ export type RootStackParamList = {
   DiamondRecovery: { lessonId: string };
   Learn: undefined;
   AllModules: undefined;
+  PrivacyPolicy: undefined;
 };
 
 export type MainTabParamList = {
