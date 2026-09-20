@@ -2,16 +2,21 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { PremiumDiamondRow } from '../components/PremiumDiamondRow';
 import { ProgressBar } from '../components/ProgressBar';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../state/AuthContext';
 import { useProgress } from '../state/ProgressContext';
 import { useAnimatedNumber } from '../utils/useAnimatedNumber';
+import { useAutoFitScale } from '../utils/useAutoFitScale';
 import { authColors, fontFamilies, liftStyle } from './authStyles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Result'>;
+
+// Shared with the lesson screen's own auto-fit width, so both screens in
+// the same flow feel like one consistent-sized experience.
+const CONTENT_WIDTH = 700;
 
 function formatDuration(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -25,7 +30,9 @@ export function ResultScreen({ route, navigation }: Props) {
   const { progress } = useProgress();
   const { width } = useWindowDimensions();
   const isNarrow = width < 720;
+  const contentWidth = Math.min(CONTENT_WIDTH, width - 40);
   const styles = useMemo(() => makeStyles(), []);
+  const { onStageLayout, onNaturalLayout, scale } = useAutoFitScale();
   const animatedXp = useAnimatedNumber(xpEarned, 900, { animateFrom: 0 });
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
@@ -48,7 +55,10 @@ export function ResultScreen({ route, navigation }: Props) {
       <View style={[styles.blob, styles.blobTop]} />
       <View style={[styles.blob, styles.blobBottom]} />
 
-      <View style={styles.header}>
+      <View style={styles.stage} onLayout={onStageLayout}>
+      <View onLayout={onNaturalLayout}>
+      <View style={[styles.scaleContent, { transform: [{ scale }] }]}>
+      <View style={[styles.header, { width: contentWidth }]}>
         <View style={styles.topRow}>
           <View>
             {/* eslint-disable-next-line @typescript-eslint/no-require-imports */}
@@ -130,6 +140,12 @@ export function ResultScreen({ route, navigation }: Props) {
             </Text>
           </View>
 
+          {/* `gap` on `bottomRowNarrow` alone left `centerColumn` and this row
+              touching (its own height under-reports vs. its rendered content
+              once stacked in a column) — a hard spacer guarantees a real gap
+              no matter what that measurement does. */}
+          {isNarrow && <View style={styles.narrowRowSpacer} />}
+
           <View style={styles.rightRow}>
             <PremiumDiamondRow lives={lives} />
             <Pressable
@@ -145,8 +161,7 @@ export function ResultScreen({ route, navigation }: Props) {
         </View>
       </View>
 
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.cardWrap}>
-        <View style={styles.card}>
+      <View style={[styles.card, { width: contentWidth }]}>
           <View style={styles.checkBadgeWrap}>
             {Array.from({ length: 8 }, (_, i) => (
               <View key={i} style={[styles.rayPivot, { transform: [{ rotate: `${i * 45}deg` }] }]}>
@@ -206,15 +221,17 @@ export function ResultScreen({ route, navigation }: Props) {
           </Pressable>
         </View>
 
-        <Pressable
-          onPress={handleContinue}
-          onHoverIn={() => setHoveredId('backBottom')}
-          onHoverOut={() => setHoveredId((id) => (id === 'backBottom' ? null : id))}
-          style={({ pressed }) => [styles.backBottomLink, liftStyle(hoveredId === 'backBottom', 10, pressed)]}
-        >
-          <Text style={styles.backBottomLinkText}>Voltar para o módulo</Text>
-        </Pressable>
-      </ScrollView>
+      <Pressable
+        onPress={handleContinue}
+        onHoverIn={() => setHoveredId('backBottom')}
+        onHoverOut={() => setHoveredId((id) => (id === 'backBottom' ? null : id))}
+        style={({ pressed }) => [styles.backBottomLink, liftStyle(hoveredId === 'backBottom', 10, pressed)]}
+      >
+        <Text style={styles.backBottomLinkText}>Voltar para o módulo</Text>
+      </Pressable>
+      </View>
+      </View>
+      </View>
     </View>
   );
 }
@@ -227,9 +244,13 @@ function makeStyles() {
     blobTop: { width: 520, height: 520, top: -220, left: -160, backgroundColor: 'rgba(56, 189, 248, 0.25)' },
     blobBottom: { width: 620, height: 620, bottom: -260, right: -220, backgroundColor: 'rgba(20, 80, 214, 0.4)' },
 
+    // Fills the viewport and centers whatever's inside — the auto-fit
+    // scale transform (`useAutoFitScale`) lives on the child measured
+    // against this box's own size, same technique as the lesson screen.
+    stage: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 16 },
+    scaleContent: { alignItems: 'center', gap: 18 },
     header: {
-      paddingHorizontal: 28,
-      paddingTop: 24,
+      paddingTop: 4,
       paddingBottom: 16,
       gap: 16,
     },
@@ -297,11 +318,12 @@ function makeStyles() {
     // whatever comes after it in RN Web — stacking into a column instead
     // gives every block its own row so the header's total height is always
     // correct and the card below never overlaps it.
-    bottomRowNarrow: { flexDirection: 'column', alignItems: 'center', gap: 14 },
+    bottomRowNarrow: { flexDirection: 'column', alignItems: 'center', gap: 20 },
     backLink: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 6, paddingHorizontal: 4 },
     backLinkText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 14, color: '#FFFFFF' },
     centerColumn: { flex: 1, minWidth: 200, alignItems: 'center', gap: 6 },
     centerColumnNarrow: { flex: 0, width: '100%' },
+    narrowRowSpacer: { height: 16 },
     breadcrumb: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     breadcrumbUnit: { fontFamily: fontFamilies.displayBold, fontSize: 14, color: '#FFFFFF' },
     breadcrumbSeparator: { fontFamily: fontFamilies.displayRegular, fontSize: 14, color: 'rgba(255,255,255,0.6)' },
@@ -321,15 +343,7 @@ function makeStyles() {
     },
     settingsText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 13, color: '#FFFFFF' },
 
-    scroll: { flex: 1 },
-    // `flexGrow: 1` + `justifyContent: 'center'` centers the card vertically
-    // when it fits within the viewport, but still scrolls instead of
-    // overlapping the header once the header wraps taller than the screen
-    // has room for (narrow widths) — same fix as the lesson screen's.
-    cardWrap: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 20, gap: 18 },
     card: {
-      width: '100%',
-      maxWidth: 620,
       backgroundColor: 'rgba(10, 24, 56, 0.6)',
       borderWidth: 1,
       borderColor: 'rgba(148, 197, 255, 0.35)',
