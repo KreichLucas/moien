@@ -104,10 +104,15 @@ export function DashboardScreen() {
           </View>
 
           <View style={[styles.statsRow, isNarrow && styles.statsRowNarrow]}>
-            <View style={styles.statPill}>
+            <Pressable
+              onPress={() => navigation.navigate('Streak')}
+              onHoverIn={onHoverIn('streakPill')}
+              onHoverOut={onHoverOut('streakPill')}
+              style={({ pressed }) => [styles.statPill, liftStyle(hoveredId === 'streakPill', 14, pressed)]}
+            >
               <Text style={styles.statPillValue}>🔥 {progress.streak}</Text>
               <Text style={styles.statPillLabel}>dias seguidos</Text>
-            </View>
+            </Pressable>
             <View style={styles.statPill}>
               <Text style={styles.statPillValue}>⭐ {progress.xp}</Text>
               <Text style={styles.statPillLabel}>XP total</Text>

@@ -1,11 +1,12 @@
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import React, { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { ACHIEVEMENTS } from '../content/achievements';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { RootStackParamList } from '../navigation/types';
 import { useProgress } from '../state/ProgressContext';
-import { ThemeColors, cardShadow, pressedStyle, useTheme } from '../theme/theme';
-import { units } from '../content/units';
+import { useAutoFitScale } from '../utils/useAutoFitScale';
+import { authColors, fontFamilies } from './authStyles';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Streak'>;
 
@@ -15,14 +16,16 @@ const MONTH_LABELS = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ];
 
+const CARD_WIDTH = 480;
+
 function toISODate(y: number, m: number, d: number): string {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
 export function StreakScreen({ navigation }: Props) {
   const { progress } = useProgress();
-  const colors = useTheme();
-  const styles = useMemo(() => makeStyles(colors), [colors]);
+  const styles = useMemo(() => makeStyles(), []);
+  const { onStageLayout, onNaturalLayout, scale } = useAutoFitScale();
 
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
@@ -33,13 +36,12 @@ export function StreakScreen({ navigation }: Props) {
   const todayISO = toISODate(today.getFullYear(), today.getMonth(), today.getDate());
   const monthPrefix = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`;
 
+  // Same linear-scan logic the old screen used — kept exactly as-is, this
+  // is a visual reskin, not a data/logic change.
   const activeDaysThisMonth = useMemo(
     () => progress.activeDates.filter((d) => d.startsWith(monthPrefix)).length,
     [progress.activeDates, monthPrefix]
   );
-
-  const streakSociety = ACHIEVEMENTS.find((a) => a.id === 'streak_7')!;
-  const streakSocietyUnlocked = streakSociety.isUnlocked(progress, units);
 
   const cells: (number | null)[] = [
     ...Array.from({ length: firstWeekday }, () => null),
@@ -64,173 +66,281 @@ export function StreakScreen({ navigation }: Props) {
     }
   };
 
+  const streakLabel = progress.streak === 1 ? 'dia de ofensiva!' : 'dias de ofensiva!';
+  const encouragement = progress.streak > 0 ? 'Você está no caminho certo!' : 'Comece sua ofensiva hoje!';
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
-          <Text style={styles.close}>✕</Text>
-        </Pressable>
-        <Text style={styles.headerTitle}>Ofensiva</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+    <View style={styles.page}>
+      <View style={[styles.blob, styles.blobTop]} />
+      <View style={[styles.blob, styles.blobBottom]} />
 
-      <View style={styles.streakHero}>
-        <Text style={styles.streakFlame}>🔥</Text>
-        <Text style={styles.streakNumber}>{progress.streak}</Text>
-        <Text style={styles.streakLabel}>
-          {progress.streak === 1 ? 'dia de ofensiva!' : 'dias de ofensiva!'}
-        </Text>
-      </View>
+      <View style={styles.stage} onLayout={onStageLayout}>
+        <View onLayout={onNaturalLayout}>
+          <View style={[styles.scaleContent, { transform: [{ scale }] }]}>
+            <View style={styles.card}>
+              <Pressable onPress={() => navigation.goBack()} style={styles.closeButton} hitSlop={8}>
+                <Ionicons name="close" size={20} color={authColors.textPrimary} />
+              </Pressable>
 
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>✅ {activeDaysThisMonth}</Text>
-          <Text style={styles.statLabel}>Dias de prática</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>⭐ {progress.xp}</Text>
-          <Text style={styles.statLabel}>XP total</Text>
-        </View>
-      </View>
+              <View style={styles.encouragementPill}>
+                <Text style={styles.encouragementText}>{encouragement}</Text>
+                <Ionicons name="star" size={14} color="#FFD65A" />
+              </View>
 
-      <View style={styles.calendarCard}>
-        <View style={styles.monthRow}>
-          <Pressable style={({ pressed }) => [styles.monthArrowHit, pressedStyle(pressed)]} onPress={goPrevMonth}>
-            <Text style={styles.monthArrow}>‹</Text>
-          </Pressable>
-          <Text style={styles.monthLabel}>
-            {MONTH_LABELS[viewMonth]} de {viewYear}
-          </Text>
-          <Pressable style={({ pressed }) => [styles.monthArrowHit, pressedStyle(pressed)]} onPress={goNextMonth}>
-            <Text style={styles.monthArrow}>›</Text>
-          </Pressable>
-        </View>
-
-        <View style={styles.weekdayRow}>
-          {WEEKDAY_LABELS.map((d) => (
-            <Text key={d} style={styles.weekdayLabel}>
-              {d}
-            </Text>
-          ))}
-        </View>
-
-        <View style={styles.grid}>
-          {cells.map((day, i) => {
-            if (day === null) return <View key={i} style={styles.dayCell} />;
-            const iso = toISODate(viewYear, viewMonth, day);
-            const isActive = progress.activeDates.includes(iso);
-            const isToday = iso === todayISO;
-            return (
-              <View key={i} style={styles.dayCell}>
-                <View
-                  style={[
-                    styles.dayCircle,
-                    isActive && styles.dayCircleActive,
-                    isToday && !isActive && styles.dayCircleToday,
-                  ]}
-                >
-                  <Text style={[styles.dayText, isActive && styles.dayTextActive]}>
-                    {isActive ? '🔥' : day}
-                  </Text>
+              <View style={styles.badgeWrap}>
+                <View style={styles.crownRow}>
+                  <View style={[styles.crownPeak, styles.crownPeakSide]} />
+                  <View style={[styles.crownPeak, styles.crownPeakCenter]} />
+                  <View style={[styles.crownPeak, styles.crownPeakSide]} />
+                </View>
+                <View style={styles.badgeRow}>
+                  <Ionicons name="leaf" size={30} color="#E8C158" style={styles.laurelLeft} />
+                  <View style={styles.shieldOuter}>
+                    <View style={styles.shieldInner}>
+                      <Ionicons name="flame" size={56} color="#FFFFFF" />
+                    </View>
+                  </View>
+                  <Ionicons name="leaf" size={30} color="#E8C158" style={styles.laurelRight} />
                 </View>
               </View>
-            );
-          })}
-        </View>
-      </View>
 
-      <View style={styles.achievementCard}>
-        <Text style={styles.achievementIcon}>{streakSocietyUnlocked ? '🔥' : '🔒'}</Text>
-        <View style={styles.achievementTextWrap}>
-          <Text style={styles.achievementTitle}>Sociedade da Chama Acesa</Text>
-          <Text style={styles.achievementText}>
-            {streakSocietyUnlocked
-              ? 'Desbloqueada! Sua maior ofensiva foi de ' + progress.maxStreak + ' dias.'
-              : 'Consiga uma ofensiva de 7 dias para desbloquear'}
-          </Text>
+              <Text style={styles.ofensivaLabel}>Ofensiva</Text>
+              <Text style={styles.streakNumber}>{progress.streak}</Text>
+              <Text style={styles.streakSub}>{streakLabel}</Text>
+              <Text style={styles.motivational}>Disciplina hoje,{'\n'}resultados amanhã!</Text>
+
+              <View style={styles.statsRow}>
+                <View style={styles.statCard}>
+                  <View style={styles.statValueRow}>
+                    <Ionicons name="checkmark-circle" size={18} color="#22C55E" />
+                    <Text style={styles.statValue}>{activeDaysThisMonth}</Text>
+                  </View>
+                  <Text style={styles.statLabel}>Dias de prática</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <View style={styles.statValueRow}>
+                    <Ionicons name="star" size={18} color="#FFD65A" />
+                    <Text style={styles.statValue}>{progress.xp}</Text>
+                  </View>
+                  <Text style={styles.statLabel}>XP total</Text>
+                </View>
+              </View>
+
+              <View style={styles.calendarCard}>
+                <View style={styles.monthRow}>
+                  <Pressable onPress={goPrevMonth} style={styles.monthArrowHit} hitSlop={8}>
+                    <Ionicons name="chevron-back" size={18} color={authColors.textSecondary} />
+                  </Pressable>
+                  <Text style={styles.monthLabel}>
+                    {MONTH_LABELS[viewMonth]} de {viewYear}
+                  </Text>
+                  <Pressable onPress={goNextMonth} style={styles.monthArrowHit} hitSlop={8}>
+                    <Ionicons name="chevron-forward" size={18} color={authColors.textSecondary} />
+                  </Pressable>
+                </View>
+
+                <View style={styles.weekdayRow}>
+                  {WEEKDAY_LABELS.map((d) => (
+                    <Text key={d} style={styles.weekdayLabel}>
+                      {d}
+                    </Text>
+                  ))}
+                </View>
+
+                <View style={styles.grid}>
+                  {cells.map((day, i) => {
+                    if (day === null) return <View key={i} style={styles.dayCell} />;
+                    const iso = toISODate(viewYear, viewMonth, day);
+                    const isActive = progress.activeDates.includes(iso);
+                    const isToday = iso === todayISO;
+                    return (
+                      <View key={i} style={styles.dayCell}>
+                        <View
+                          style={[
+                            styles.dayCircle,
+                            isActive && styles.dayCircleActive,
+                            isToday && !isActive && styles.dayCircleToday,
+                          ]}
+                        >
+                          {isActive ? (
+                            <Ionicons name="flame" size={16} color={authColors.accentCyan} />
+                          ) : (
+                            <Text style={styles.dayText}>{day}</Text>
+                          )}
+                        </View>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            </View>
+          </View>
         </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
-function makeStyles(colors: ThemeColors) {
+function makeStyles() {
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    content: { padding: 20, paddingTop: 60, paddingBottom: 60 },
-    header: {
+    page: { flex: 1, minHeight: '100%', backgroundColor: authColors.pageBg, overflow: 'hidden' },
+    blob: { position: 'absolute', borderRadius: 9999, opacity: 0.3 },
+    blobTop: { width: 480, height: 480, top: -200, left: -160, backgroundColor: authColors.blobBlue },
+    blobBottom: { width: 520, height: 520, bottom: -220, right: -180, backgroundColor: authColors.blobCyan },
+
+    stage: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingVertical: 16 },
+    scaleContent: { alignItems: 'center' },
+
+    card: {
+      width: CARD_WIDTH,
+      backgroundColor: authColors.cardBg,
+      borderWidth: 1,
+      borderColor: authColors.cardBorder,
+      borderRadius: 32,
+      paddingTop: 20,
+      paddingBottom: 28,
+      paddingHorizontal: 28,
+      alignItems: 'center',
+      shadowColor: authColors.accentBlue,
+      shadowOffset: { width: 0, height: 20 },
+      shadowOpacity: 0.3,
+      shadowRadius: 40,
+      elevation: 12,
+    },
+    closeButton: {
+      position: 'absolute',
+      top: 18,
+      left: 18,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: authColors.inputBg,
+      borderWidth: 1,
+      borderColor: authColors.inputBorder,
+    },
+    encouragementPill: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 20,
+      gap: 6,
+      alignSelf: 'flex-end',
+      backgroundColor: authColors.inputBg,
+      borderWidth: 1,
+      borderColor: authColors.cardBorder,
+      borderRadius: 999,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      marginBottom: 8,
     },
-    close: { fontSize: 22, color: colors.textSecondary, fontWeight: '600' },
-    headerTitle: { fontSize: 17, fontWeight: '800', color: colors.text },
-    headerSpacer: { width: 22 },
-    streakHero: { alignItems: 'center', marginBottom: 24 },
-    streakFlame: { fontSize: 56 },
-    streakNumber: { fontSize: 44, fontWeight: '800', color: colors.text, marginTop: 4 },
-    streakLabel: { fontSize: 15, color: colors.textSecondary, marginTop: 2 },
-    statsRow: { flexDirection: 'row', gap: 12, marginBottom: 20 },
+    encouragementText: { fontFamily: fontFamilies.displaySemiBold, fontSize: 11, color: authColors.textSecondary },
+
+    badgeWrap: { alignItems: 'center', marginTop: 4, marginBottom: 8 },
+    crownRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 3, marginBottom: -6, zIndex: 1 },
+    crownPeak: {
+      width: 0,
+      height: 0,
+      borderLeftWidth: 9,
+      borderRightWidth: 9,
+      borderBottomWidth: 16,
+      borderLeftColor: 'transparent',
+      borderRightColor: 'transparent',
+      borderBottomColor: '#F0C94A',
+    },
+    crownPeakSide: { transform: [{ scale: 0.75 }] },
+    crownPeakCenter: {},
+    badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    laurelLeft: { transform: [{ rotate: '-20deg' }] },
+    laurelRight: { transform: [{ scaleX: -1 }, { rotate: '-20deg' }] },
+    shieldOuter: {
+      width: 112,
+      height: 124,
+      backgroundColor: '#E8C158',
+      alignItems: 'center',
+      justifyContent: 'center',
+      // @ts-expect-error web-only CSS property, valid on this web-only build
+      clipPath: 'polygon(0% 0%, 100% 0%, 100% 62%, 50% 100%, 0% 62%)',
+      shadowColor: '#F0C94A',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6,
+      shadowRadius: 20,
+      elevation: 8,
+    },
+    shieldInner: {
+      width: 98,
+      height: 110,
+      alignItems: 'center',
+      justifyContent: 'center',
+      overflow: 'hidden',
+      clipPath: 'polygon(0% 0%, 100% 0%, 100% 62%, 50% 100%, 0% 62%)',
+    },
+
+    ofensivaLabel: { fontFamily: fontFamilies.displaySemiBold, fontSize: 14, color: authColors.textSecondary, marginTop: 4 },
+    streakNumber: { fontFamily: fontFamilies.displayExtraBold, fontSize: 56, color: authColors.textPrimary, lineHeight: 62 },
+    streakSub: { fontFamily: fontFamilies.displayBold, fontSize: 16, color: authColors.textPrimary, marginTop: 2 },
+    motivational: {
+      fontFamily: fontFamilies.displaySemiBold,
+      fontSize: 13,
+      color: authColors.accentCyan,
+      textAlign: 'center',
+      marginTop: 10,
+      lineHeight: 18,
+    },
+
+    statsRow: { flexDirection: 'row', gap: 12, width: '100%', marginTop: 22 },
     statCard: {
       flex: 1,
-      backgroundColor: colors.surface,
+      backgroundColor: authColors.inputBg,
+      borderWidth: 1,
+      borderColor: authColors.cardBorder,
       borderRadius: 16,
-      padding: 16,
+      paddingVertical: 14,
       alignItems: 'center',
-      ...cardShadow(colors),
     },
-    statValue: { fontSize: 20, fontWeight: '800', color: colors.text },
-    statLabel: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+    statValueRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    statValue: { fontFamily: fontFamilies.displayExtraBold, fontSize: 18, color: authColors.textPrimary },
+    statLabel: { fontFamily: fontFamilies.displayRegular, fontSize: 11, color: authColors.textSecondary, marginTop: 4 },
+
     calendarCard: {
-      backgroundColor: colors.surface,
-      borderRadius: 16,
+      width: '100%',
+      backgroundColor: authColors.inputBg,
+      borderWidth: 1,
+      borderColor: authColors.cardBorder,
+      borderRadius: 20,
       padding: 16,
-      marginBottom: 20,
-      ...cardShadow(colors),
+      marginTop: 16,
     },
-    monthRow: {
-      flexDirection: 'row',
+    monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+    monthArrowHit: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
       alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 16,
+      justifyContent: 'center',
+      backgroundColor: authColors.cardBg,
+      borderWidth: 1,
+      borderColor: authColors.cardBorder,
     },
-    monthArrowHit: { paddingHorizontal: 12, paddingVertical: 4 },
-    monthArrow: { fontSize: 22, color: colors.accent, fontWeight: '700' },
-    monthLabel: { fontSize: 15, fontWeight: '700', color: colors.text },
-    weekdayRow: { flexDirection: 'row', marginBottom: 8 },
+    monthLabel: { fontFamily: fontFamilies.displayBold, fontSize: 14, color: authColors.textPrimary },
+    weekdayRow: { flexDirection: 'row', marginBottom: 6 },
     weekdayLabel: {
       width: `${100 / 7}%`,
       textAlign: 'center',
-      fontSize: 12,
-      fontWeight: '700',
-      color: colors.textSecondary,
+      fontFamily: fontFamilies.displaySemiBold,
+      fontSize: 11,
+      color: authColors.textMuted,
     },
     grid: { flexDirection: 'row', flexWrap: 'wrap' },
-    dayCell: { width: `${100 / 7}%`, alignItems: 'center', marginBottom: 8 },
+    dayCell: { width: `${100 / 7}%`, alignItems: 'center', marginBottom: 6 },
     dayCircle: {
-      width: 34,
-      height: 34,
-      borderRadius: 17,
+      width: 30,
+      height: 30,
+      borderRadius: 15,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    dayCircleActive: { backgroundColor: colors.streakActiveBg, borderWidth: 2, borderColor: colors.streakActiveBorder },
-    dayCircleToday: { borderWidth: 2, borderColor: colors.accent },
-    dayText: { fontSize: 13, color: colors.text, fontWeight: '600' },
-    dayTextActive: { fontSize: 15 },
-    achievementCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 14,
-      backgroundColor: colors.surface,
-      borderRadius: 16,
-      padding: 16,
-      ...cardShadow(colors),
-    },
-    achievementIcon: { fontSize: 28 },
-    achievementTextWrap: { flex: 1 },
-    achievementTitle: { fontSize: 15, fontWeight: '700', color: colors.text },
-    achievementText: { fontSize: 13, color: colors.textSecondary, marginTop: 2 },
+    dayCircleActive: { backgroundColor: 'rgba(56, 189, 248, 0.16)', borderWidth: 1, borderColor: authColors.accentCyan },
+    dayCircleToday: { borderWidth: 1, borderColor: authColors.textMuted },
+    dayText: { fontFamily: fontFamilies.displayRegular, fontSize: 12, color: authColors.textSecondary },
   });
 }
