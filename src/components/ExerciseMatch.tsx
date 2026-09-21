@@ -10,9 +10,12 @@ import { shuffle } from '../utils/shuffle';
 export function ExerciseMatch({
   exercise,
   onComplete,
+  firstColumn = 'pt',
 }: {
   exercise: MatchExercise;
   onComplete: (outcome: ExerciseOutcome) => void;
+  /** Which language's column renders on the left — every real lesson leaves this at the default 'pt'; only Vocabulário's round-direction alternation passes 'lu'. */
+  firstColumn?: 'pt' | 'lu';
 }) {
   const colors = lessonColors;
   const styles = useMemo(() => makeStyles(colors), [colors]);
@@ -39,7 +42,13 @@ export function ExerciseMatch({
         onComplete({
           itemResults: exercise.pairs
             .map((pair, i) => {
-              const itemId = ITEM_REGISTRY.exerciseToItemIds[`${exercise.id}#${i}`]?.[0];
+              // Real lesson content always resolves through the registry
+              // (built once from units.ts at load time); a pair's own
+              // `itemId` is otherwise unset there and only used as a
+              // fallback here for a synthetically-built MatchExercise —
+              // e.g. Vocabulário's matching round, which has no fixed
+              // exercise id of its own for the registry to have indexed.
+              const itemId = ITEM_REGISTRY.exerciseToItemIds[`${exercise.id}#${i}`]?.[0] ?? pair.itemId;
               if (!itemId) return null;
               const correct = !wrongPts.current.has(pair.pt);
               return {
@@ -98,34 +107,50 @@ export function ExerciseMatch({
     return null;
   };
 
+  const ptColumn = (
+    <View style={styles.column}>
+      {ptWords.map((word) => (
+        <Pressable
+          key={word}
+          style={[styles.card, cardStyle(word, true)]}
+          disabled={matched.has(word)}
+          onPress={() => handlePickPt(word)}
+        >
+          <Text style={styles.cardText}>{word}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+  const luColumn = (
+    <View style={styles.column}>
+      {luWords.map((word) => (
+        <Pressable
+          key={word}
+          style={[styles.card, cardStyle(word, false)]}
+          disabled={matched.has(word)}
+          onPress={() => handlePickLu(word)}
+        >
+          <Text style={styles.cardText}>{word}</Text>
+        </Pressable>
+      ))}
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <Text style={styles.instruction}>Associe as palavras em português e luxemburguês</Text>
       <View style={styles.columns}>
-        <View style={styles.column}>
-          {ptWords.map((word) => (
-            <Pressable
-              key={word}
-              style={[styles.card, cardStyle(word, true)]}
-              disabled={matched.has(word)}
-              onPress={() => handlePickPt(word)}
-            >
-              <Text style={styles.cardText}>{word}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <View style={styles.column}>
-          {luWords.map((word) => (
-            <Pressable
-              key={word}
-              style={[styles.card, cardStyle(word, false)]}
-              disabled={matched.has(word)}
-              onPress={() => handlePickLu(word)}
-            >
-              <Text style={styles.cardText}>{word}</Text>
-            </Pressable>
-          ))}
-        </View>
+        {firstColumn === 'pt' ? (
+          <>
+            {ptColumn}
+            {luColumn}
+          </>
+        ) : (
+          <>
+            {luColumn}
+            {ptColumn}
+          </>
+        )}
       </View>
 
       {mistakeHint && (

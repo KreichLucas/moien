@@ -26,6 +26,7 @@ import { ResultScreen } from '../screens/ResultScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { SignUpScreen } from '../screens/SignUpScreen';
 import { StreakScreen } from '../screens/StreakScreen';
+import { VocabularyScreen } from '../screens/VocabularyScreen';
 import { useAuth } from '../state/AuthContext';
 import { ThemeColors, darkTheme, lightTheme, useTheme } from '../theme/theme';
 import { Sidebar, SidebarItem } from './Sidebar';
@@ -63,7 +64,13 @@ function MainTabs({ navigation }: MainTabsProps) {
       active: activeTab === 'Home',
       onPress: () => navigation.navigate('Main', { screen: 'Home' }),
     },
-    { id: 'learn', icon: 'book', label: 'Aprender', active: false, onPress: () => navigation.navigate('Learn') },
+    {
+      id: 'vocabulary',
+      icon: 'book',
+      label: 'Vocabulário',
+      active: activeTab === 'Vocabulary',
+      onPress: () => navigation.navigate('Main', { screen: 'Vocabulary' }),
+    },
     {
       id: 'practice',
       icon: 'barbell',
@@ -108,6 +115,12 @@ function MainTabs({ navigation }: MainTabsProps) {
             component={DashboardScreen}
             options={{ tabBarLabel: 'Início', tabBarIcon: tabIcon('home') }}
             listeners={{ focus: () => setActiveTab('Home') }}
+          />
+          <Tab.Screen
+            name="Vocabulary"
+            component={VocabularyScreen}
+            options={{ tabBarLabel: 'Vocabulário', tabBarIcon: tabIcon('book') }}
+            listeners={{ focus: () => setActiveTab('Vocabulary') }}
           />
           <Tab.Screen
             name="Practice"

@@ -28,6 +28,7 @@ type Action =
   | { type: 'HYDRATE'; state: ProgressState }
   | { type: 'RECORD_LESSON_RESULT'; lessonId: string; xpEarned: number; wasPerfect: boolean; attempts: AttemptResult[] }
   | { type: 'RECORD_PRACTICE_ATTEMPTS'; attempts: AttemptResult[] }
+  | { type: 'RECORD_VOCAB_ROUND'; attempts: AttemptResult[]; xpEarned: number }
   | { type: 'MARK_PENDING_REVIEW'; attempts: AttemptResult[] }
   | { type: 'SET_PENDING_LESSON'; pendingLesson: PendingLessonState | null }
   | { type: 'SPEND_DIAMOND' }
@@ -178,6 +179,37 @@ function reducer(state: ProgressState, action: Action): ProgressState {
       const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
       return { ...state, itemMastery, recentAttempts, pendingReviewItemIds, diamonds, diamondRecoveryCleared };
     }
+    case 'RECORD_VOCAB_ROUND': {
+      // Vocabulário's matching rounds review words already learned in real
+      // lessons — same mastery/SRS/pendingReview/diamond-recovery pipeline
+      // as RECORD_PRACTICE_ATTEMPTS (this is genuinely review, not new
+      // content), except it DOES grant XP through the exact same `xp`
+      // field every lesson uses — Vocabulário explicitly shows "+XP" on
+      // its completion screen, unlike Prática. Still deliberately leaves
+      // streak/completedLessonIds/perfectLessonIds alone: matching pairs
+      // isn't "completing a lesson," and letting it touch those would
+      // corrupt level-progress/streak bookkeeping that assumes
+      // completedLessonIds only ever holds real lesson ids.
+      const now = new Date().toISOString();
+      const itemMastery = applyAttemptsToMastery(state.itemMastery, action.attempts, now);
+      const pendingReviewItemIds = applyAttemptsToPendingReview(state.pendingReviewItemIds, action.attempts);
+      const { diamonds, diamondRecoveryCleared } = applyDiamondRecovery(
+        state.diamonds,
+        state.diamondRecoveryCleared,
+        state.pendingReviewItemIds,
+        pendingReviewItemIds
+      );
+      const recentAttempts = [...[...action.attempts].reverse(), ...state.recentAttempts].slice(0, RECENT_ATTEMPTS_CAP);
+      return {
+        ...state,
+        xp: state.xp + action.xpEarned,
+        itemMastery,
+        recentAttempts,
+        pendingReviewItemIds,
+        diamonds,
+        diamondRecoveryCleared,
+      };
+    }
     case 'MARK_PENDING_REVIEW': {
       // Fired live, per-answer, from LessonScreen — independent of mastery/
       // xp/streak, which stay batched until the lesson actually completes
@@ -211,6 +243,7 @@ interface ProgressContextValue {
   progress: ProgressState;
   completeLesson: (lessonId: string, xpEarned: number, wasPerfect: boolean, attempts: AttemptResult[]) => void;
   recordPracticeAttempts: (attempts: AttemptResult[]) => void;
+  recordVocabRound: (attempts: AttemptResult[], xpEarned: number) => void;
   markPendingReview: (attempts: AttemptResult[]) => void;
   savePendingLesson: (pendingLesson: PendingLessonState) => void;
   clearPendingLesson: () => void;
@@ -252,6 +285,10 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RECORD_PRACTICE_ATTEMPTS', attempts });
   };
 
+  const recordVocabRound = (attempts: AttemptResult[], xpEarned: number) => {
+    dispatch({ type: 'RECORD_VOCAB_ROUND', attempts, xpEarned });
+  };
+
   const markPendingReview = (attempts: AttemptResult[]) => {
     dispatch({ type: 'MARK_PENDING_REVIEW', attempts });
   };
@@ -279,6 +316,7 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
         progress,
         completeLesson,
         recordPracticeAttempts,
+        recordVocabRound,
         markPendingReview,
         savePendingLesson,
         clearPendingLesson,
